@@ -1,0 +1,9 @@
+[alias]
+reset = "run -- reset"
+setup = "run -- setup"
+clean = "run -- clean"
+
+
+[env]
+HOME = { value='/Users/levirogalla/Projects/lib/cli-project-manager/test_root', force=true }
+RUST_BACKTRACE='1'
