@@ -1,11 +1,16 @@
 use std::env;
 use std::path::Path;
 
+pub mod types {
+  pub type AliasName = String;
+  pub type ProjectTypeName = String;
+  pub type LibraryName = String;
+}
+
 pub struct XDG {
     pub home_var_name: String,
 }
 impl XDG {
-
     pub fn new(home_var_name: Option<&str>) -> Self {
         XDG {
             home_var_name: home_var_name.unwrap_or("HOME").to_string(),
