@@ -9,8 +9,6 @@ use std::{
 use rand::prelude::*;
 
 
-const TEST_HOME: &str = "/Users/levirogalla/Projects/lib/cli-project-manager/tests/home";
-
 /// A test directory that is deleted when it goes out of scope
 struct TestDir {
     path: String,
@@ -41,7 +39,7 @@ impl Drop for TestDir {
 }
 
 fn gen_test_home_path(unique_name: &str) -> PathBuf {
-    PathBuf::from(format!("{TEST_HOME}_{unique_name}"))
+    PathBuf::from(env::current_dir().unwrap().join("tests/test_home_dirs/").join(unique_name))
 }
 
 fn gen_test_config_home_path(unique_name: &str) -> PathBuf {

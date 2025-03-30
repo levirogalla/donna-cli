@@ -1,9 +1,15 @@
-add support for project types, for example a project type can by python, but a python project can placed in Api or Ai alias group. The builder rules are specific to the project type, so if you make a python project the builder automatically creates a env, a basic project structure with a src dir, but this would be user defined, so it could be anything. NOTE: maybe all builders should be defined in the same file??? that would make everything a lot easier, or maybe the default builder file in in xdg_data and you can define other builder files individually or default to the same builder file, the builder file will be called with project name so you can match that, this would also allow you to re use logic, maybe use lua? idk neovim uses that so im sure its good for that kind of stuff, also an alias can have a default builder if non is specified, like the Python alias can have the default builder of a python type project
+done - add support for project types, for example a project type can by python, but a python project can placed in Api or Ai alias group. The builder rules are specific to the project type, so if you make a python project the builder automatically creates a env, a basic project structure with a src dir, but this would be user defined, so it could be anything. NOTE: maybe all builders should be defined in the same file??? that would make everything a lot easier, or maybe the default builder file in in xdg_data and you can define other builder files individually or default to the same builder file, the builder file will be called with project name so you can match that, this would also allow you to re use logic, maybe use lua? idk neovim uses that so im sure its good for that kind of stuff, also an alias can have a default builder if non is specified, like the Python alias can have the default builder of a python type project
 
-track created projects in a list somewhere, probably config will have a dict called project will be a map of project name to project paths, or maybe this isn't needed since the os has an api to find symlinks of the file, and we know all the lib paths, but make a function to list all the locations (alias groups) of a project, 
-it would need to save what builder to save the project type somewhere so it knows what builder to use, it can also expose a custom builder if you have an exception. it should store this per project in the .pm dir
+done - decided not to because this would make it harder to move projects around freely out side of the project managerw - track created projects in a list somewhere, probably config will have a dict called project will be a map of project name to project paths, or maybe this isn't needed since the os has an api to find symlinks of the file, and we know all the lib paths, but make a function to list all the locations (alias groups) of a project, 
 
-add support for an opener, an opener will run when you want to open a project, it can spawn a process like vs code for coding, or word for school stuff
+done - it would need to save what builder to save the project type somewhere so it knows what builder to use, it can also expose a custom builder if you have an exception. it should store this per project in the .pm dir
+
+
+add support for an opener and builder, an opener will run when you want to open a project, it can spawn a process like vs code for coding, or word for school stuff
+
+add update operations, edit alias group name, move alias group location, will not implement move library location since that could cause breaking changes to the projects in it, move a project from one alias_group to another
+
+add support for custom project metadata to be saved in the .pm dir
 
 start work on the cli
 move aliases to different groups
@@ -12,3 +18,5 @@ delete projects
 list aliases
 make projects
 make aliases
+
+add examples to docs
