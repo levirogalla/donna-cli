@@ -202,6 +202,16 @@ impl ProjectConfig {
     }
 }
 
+impl Default for ProjectConfig {
+    fn default() -> Self {
+        ProjectConfig {
+            project_type: None,
+            opener: None,
+            builder: None,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct ConfigError {
     message: String,

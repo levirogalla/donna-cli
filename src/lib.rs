@@ -15,6 +15,8 @@ mod utils; // re export for tests
 use std::{collections::HashSet, fs};
 use std::os::unix::fs::symlink;
 use std::path::Path;
+use mlua::prelude::*;
+use mlua::Lua;
 
 pub use utils::XDG;
 pub use config_io::{Config, Alias, ProjectConfig};
@@ -84,34 +86,79 @@ pub fn create_lib(name: &str, path: &str, default: bool, xdg: &XDG) {
 /// - `lib` – Optional library name to store the project in.
 /// - `xdg` – XDG configuration reference.
 pub fn create_project(name: &str, project_type: Option<api_types::ProjectTypeName>, alias_group: Option<api_types::AliasName>, lib: Option<api_types::LibraryName>, xdg: &XDG) {
+    // TODO: Allow just passing of alias location, maybe you want to make an alias not in a designated alias group, just in like a school folder for example
     let config = Config::load(None, xdg).expect("Could not load config");
-    let project_config_path = Path::new(config.get_lib_path(lib).expect("Could not find lib path")).join(name).join(ProjectConfig::PROJECT_ROOT_REL_PATH);
-    let parent_dir = project_config_path.parent().expect("Invalid project config path");
+    let project_path = Path::new(config.get_lib_path(lib).expect("Could not find lib path")).join(name);
+    let project_config_path = project_path.join(ProjectConfig::PROJECT_ROOT_REL_PATH);
+    // let project_path = project_config_path.parent().expect("Invalid project config path");
 
-    fs::create_dir_all(parent_dir).expect("Could not create parent directory");
-    fs::File::create(&project_config_path).expect("Could not create project config file");
+    fs::create_dir_all(project_config_path.parent().unwrap()).expect("Could not create project directory");
+    fs::File::create_new(&project_config_path).expect("Could not create project config file");
+
+    let mut project_config = ProjectConfig::default();
     
-    let project_config = ProjectConfig::new(project_type.map(|pt| pt.to_string()), None, None);
-    println!("Project config: {:?}", project_config);
-    project_config.save(&project_config_path.to_str().unwrap()).expect("Could not save project config");
 
     let mut project_alias_groups: HashSet<&str> = HashSet::new();
+    if let Some(ag) = alias_group {
+        project_alias_groups.insert(ag);
+    }
+
     if let Some(pt) = project_type {
         let project_type_config = config.get_project_type(pt.to_string()).expect("Could not find project type");
+        
+        project_config.project_type = Some(pt.to_string());
+        project_config.opener = project_type_config.opener.clone();
+        project_config.builder = project_type_config.builder.clone();
+
         if let Some(alias_groups) = &project_type_config.default_alias_groups {
             project_alias_groups.extend(alias_groups.iter().map(|s| s.as_str()));
         }
-    }
-    if let Some(ag) = alias_group {
-        project_alias_groups.insert(ag);
+
+        if let Some(builder) = &project_type_config.builder {
+            let lua = Lua::new();
+            let globals = lua.globals();
+            globals.set("PM_PROJECT_NAME", name).unwrap();
+            globals.set("PM_PROJECT_PATH", project_path.to_str()).unwrap();
+            globals.set("PM_PROJECT_TYPE", pt).unwrap();
+            globals.set("PM_PROJECT_LIB", lib).unwrap();
+            lua.load(fs::read_to_string(builder).expect("Could not find builder file")).exec().expect("Failed to run project builder");
+            // TODO: maybe run clean up code here to delete the project dir if building it fails
+        }
     }
 
     for alias_group in project_alias_groups {
         let alias = config.get_alias_group(alias_group).expect("Could not find alias");
         let alias_path = Path::new(&alias.path).join(name);
-        symlink(&project_config_path, alias_path).expect("Could not create symlink");
+        symlink(&project_path, alias_path).expect("Could not create symlink");
+    }
+    project_config.save(&project_config_path.to_str().unwrap()).expect("Could not save project config");
+}
+
+
+/// Opens a project by loading its configuration and executing the specified opener command.
+/// 
+/// # Arguments
+/// - `name` – The name of the project to open.
+/// - `lib` – Optional library name to locate the project.
+/// - `xdg` – XDG configuration reference.
+pub fn open_project(name: &str, lib: Option<&str>, xdg: &XDG) {
+    let config = Config::load(None, xdg).expect("Could not load config");
+    let project_path = Path::new(config.get_lib_path(lib).expect("Could not find lib path")).join(name);
+    let project_config_path = project_path.join(ProjectConfig::PROJECT_ROOT_REL_PATH);
+    let project_config = ProjectConfig::load(project_config_path.to_str().unwrap()).expect("Could not load project config");
+    println!("Project config: {:?}", project_config);
+    if let Some(opener) = project_config.opener {
+        println!("sfsdfsdf");
+        let lua = Lua::new();
+        let globals = lua.globals();
+        globals.set("PM_PROJECT_NAME", name).unwrap();
+        globals.set("PM_PROJECT_PATH", project_path.to_str().unwrap()).unwrap();
+        globals.set("PM_PROJECT_TYPE", project_config.project_type).unwrap();
+        globals.set("PM_PROJECT_LIB", lib).unwrap();
+        lua.load(fs::read_to_string(opener).expect("Could not find opener file")).exec().expect("Failed to run project opener");
     }
 }
+
 
 /// Setup up the the data diroctory and config directory.
 pub use env_setup::setup_pm;

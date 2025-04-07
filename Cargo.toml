@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.5.27", features = ["derive"] }
+mlua = { version = "0.10.3", features = ["lua54", "vendored"] }
 rand = "0.9.0"
 serde = { version = "1.0.217", features = ["derive"] }
 toml = "0.8.19"

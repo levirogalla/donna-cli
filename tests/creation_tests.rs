@@ -6,116 +6,13 @@ use std::{
     env, fs, ops::Deref, path::{self, Path, PathBuf}
 };
 
+mod utils;
+use utils::{
+    gen_test_alias_groups_path, gen_test_config_home_path, gen_test_data_home_path,
+    gen_test_home_path, setup_home, TestDir,
+};
+
 use rand::prelude::*;
-
-
-/// A test directory that is deleted when it goes out of scope
-struct TestDir {
-    path: String,
-}
-
-impl TestDir {
-    /// Create a new test directory
-    fn new(path: &str) -> Self {
-        fs::create_dir_all(path).unwrap();
-        TestDir {
-            path: path.to_string(),
-        }
-    }
-
-    /// Mark an existing directory as a test directory
-    fn mark(path: &str) -> Self {
-        assert!(PathBuf::from(path).exists());
-        TestDir {
-            path: path.to_string(),
-        }
-    }
-}
-
-impl Drop for TestDir {
-    fn drop(&mut self) {
-        fs::remove_dir_all(&self.path).unwrap();
-    }
-}
-
-fn gen_test_home_path(unique_name: &str) -> PathBuf {
-    PathBuf::from(env::current_dir().unwrap().join("tests/test_home_dirs/").join(unique_name))
-}
-
-fn gen_test_config_home_path(unique_name: &str) -> PathBuf {
-    PathBuf::from(gen_test_home_path(unique_name)).join(".config")
-}
-
-fn gen_test_data_home_path(unique_name: &str) -> PathBuf {
-    PathBuf::from(gen_test_home_path(unique_name)).join(".local/share")
-}
-
-fn gen_test_alias_groups_path(unique_name: &str) -> PathBuf {
-    PathBuf::from(gen_test_home_path(unique_name)).join("alias_groups")
-}
-
-fn set_home_env(unique_name: &str, xdg: &XDG) {
-    env::set_var(
-        &xdg.home_var_name,
-        gen_test_home_path(unique_name).to_str().unwrap(),
-    );
-}
-
-fn set_config_env(unique_name: &str) {
-    env::set_var(
-        "XDG_CONFIG_HOME",
-        gen_test_config_home_path(unique_name).to_str().unwrap(),
-    );
-}
-
-fn set_data_env(unique_name: &str) {
-    env::set_var(
-        "XDG_DATA_HOME",
-        gen_test_data_home_path(unique_name).to_str().unwrap(),
-    );
-}
-
-fn delete_home(unique_name: &str) {
-    fs::remove_dir_all(format!(
-        "/Users/levirogalla/Projects/lib/cli-project-manager/tests/home_{}",
-        unique_name
-    ))
-    .unwrap_or_else(|_| {
-        println!("Test home directory is already deleted.");
-    });
-}
-
-fn setup_home(unique_name: &str, xdg: &XDG) -> TestDir {
-    set_home_env(unique_name, xdg);
-    setup_pm(xdg);
-    TestDir::mark(gen_test_home_path(unique_name).to_str().unwrap())
-}
-
-const TEST_ALIAS_PATH: &str =
-    "/Users/levirogalla/Projects/lib/cli-project-manager/tests/home/groups";
-
-fn print_fs(dir: &str) {
-    fn print_dir(path: &Path, prefix: String) {
-        if let Ok(entries) = fs::read_dir(path) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-                let file_name = entry.file_name().into_string().unwrap_or_default();
-                println!("{}{}", prefix, file_name);
-                if path.is_dir() {
-                    print_dir(&path, format!("{}  ", prefix));
-                }
-            }
-        }
-    }
-
-    let root = Path::new(dir);
-    if root.exists() && root.is_dir() {
-        println!("{}", dir);
-        print_dir(root, String::from("  "));
-    } else {
-        println!("Directory does not exist: {}", dir);
-    }
-}
 
 #[test]
 fn test_fs_setup() {
@@ -227,9 +124,9 @@ fn test_create_project_with_alias_and_lib() {
         .join("lib/test-proj2")
         .exists());
 
-    assert!(alias_group_path.join("a1/test-proj1").exists());
-    assert!(alias_group_path.join("a1/test-proj2").exists());
-    assert!(alias_group_path.join("a2/test-proj3").exists());
+    assert!(alias_group_path.join("a1/test-proj1/.pm/project.toml").exists());
+    assert!(alias_group_path.join("a1/test-proj2/.pm/project.toml").exists());
+    assert!(alias_group_path.join("a2/test-proj3/.pm/project.toml").exists());
 }
 
 #[test]
@@ -414,19 +311,19 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
                 assert!(home_path.join("alias3").join(&project.name).exists());
             }
             (None, Some(ref alias_group)) if alias_group == "alias1" => {
-                assert!(home_path.join("alias1").join(&project.name).exists());
-                assert!(!home_path.join("alias2").join(&project.name).exists());
-                assert!(!home_path.join("alias3").join(&project.name).exists());
+                assert!(home_path.join("alias1").join(&project.name).join(".pm/project.toml").exists());
+                assert!(!home_path.join("alias2").join(&project.name).join(".pm/project.toml").exists());
+                assert!(!home_path.join("alias3").join(&project.name).join(".pm/project.toml").exists());
             }
             (None, Some(ref alias_group)) if alias_group == "alias2" => {
-                assert!(!home_path.join("alias1").join(&project.name).exists());
-                assert!(home_path.join("alias2").join(&project.name).exists());
-                assert!(!home_path.join("alias3").join(&project.name).exists());
+                assert!(!home_path.join("alias1").join(&project.name).join(".pm/project.toml").exists());
+                assert!(home_path.join("alias2").join(&project.name).join(".pm/project.toml").exists());
+                assert!(!home_path.join("alias3").join(&project.name).join(".pm/project.toml").exists());
             }
             (None, Some(ref alias_group)) if alias_group == "alias3" => {
-                assert!(!home_path.join("alias1").join(&project.name).exists());
-                assert!(!home_path.join("alias2").join(&project.name).exists());
-                assert!(home_path.join("alias3").join(&project.name).exists());
+                assert!(!home_path.join("alias1").join(&project.name).join(".pm/project.toml").exists());
+                assert!(!home_path.join("alias2").join(&project.name).join(".pm/project.toml").exists());
+                assert!(home_path.join("alias3").join(&project.name).join(".pm/project.toml").exists());
             }
             (None, None) => {
                 assert!(!home_path.join("alias1").join(&project.name).exists());
@@ -441,7 +338,10 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
 
 }
 
+#[test]
+#[ignore]
 fn test_incorrect_usage() {
+    todo!();
     // test incorrect usage of the API
     // like creating a project with an alias that doesn't exist
     // or creating a project with a type that doesn't exist

@@ -3,3 +3,4 @@ test_root
 notes.txt
 README-old.md
 .DS_Store
+lua/

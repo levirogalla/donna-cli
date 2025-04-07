@@ -4,12 +4,16 @@ done - decided not to because this would make it harder to move projects around 
 
 done - it would need to save what builder to save the project type somewhere so it knows what builder to use, it can also expose a custom builder if you have an exception. it should store this per project in the .pm dir
 
+done - add support for an opener and builder, an opener will run when you want to open a project, it can spawn a process like vs code for coding, or word for school stuff
 
-add support for an opener and builder, an opener will run when you want to open a project, it can spawn a process like vs code for coding, or word for school stuff
+add update operations, edit alias group name, move alias group location, will not implement move library location since that could cause breaking changes to the projects in it, move a project from one alias_group to another, un track alias group
 
-add update operations, edit alias group name, move alias group location, will not implement move library location since that could cause breaking changes to the projects in it, move a project from one alias_group to another
+add ability to create an alias in a one off location when making a project, in the cli maybe you can make it so it creates an alias at ur current pwd
 
 add support for custom project metadata to be saved in the .pm dir
+
+add better error handling to api, aka add error handling to the api, there is none lol it just panicks for everything
+- error handeling for runtime errors in opener and builder
 
 start work on the cli
 move aliases to different groups
