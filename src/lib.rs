@@ -17,6 +17,7 @@ use std::os::unix::fs::symlink;
 use std::path::Path;
 use mlua::prelude::*;
 use mlua::Lua;
+use trash;
 
 pub use utils::XDG;
 pub use config_io::{Config, Alias, ProjectConfig};
@@ -159,6 +160,56 @@ pub fn open_project(name: &str, lib: Option<&str>, xdg: &XDG) {
     }
 }
 
+/// To update alias group name and move alias group to a new location.
+/// 
+/// # Arguments
+/// - `name` – The current name of the alias group.
+/// - `new_name` – Optional new name for the alias group.
+/// - `new_path` – Optional new path for the alias group.
+/// - `xdg` – XDG configuration reference.
+pub fn update_alias_group(name: &str, new_name: Option<&str>, new_path: Option<&str>, xdg: &XDG) {
+    let mut config = Config::load(None, xdg).expect("Could not load config");
+    let alias = config.delete_alias_group(name).expect("Could not find alias group");
+    let old_path = alias.path;
+    let updated_name = new_name.unwrap_or(name);
+    let updated_path = new_path.unwrap_or(&old_path);
+    if &old_path != updated_path {
+        fs::rename(&old_path, updated_path).expect("Could not move alias group");
+    }
+    config.add_alias_group(updated_name.to_string(), &Alias::new(updated_path));
+    config.save(None, xdg).expect("Could not save config");
+}
+
+/// Untrack an alias group by removing it from the config.
+/// 
+/// # Arguments
+/// - `name` – The name of the alias group to untrack.
+/// - `xdg` – XDG configuration reference.
+pub fn untrack_alias_group(name: &str, xdg: &XDG) {
+    let mut config = Config::load(None, xdg).expect("Could not load config");
+    config.delete_alias_group(name).expect("Could not find alias group");
+    config.save(None, xdg).expect("Could not save config");
+}
+
+/// Delete an alias group and move it to system trash.
+/// 
+/// # Arguments
+/// - `name` – The name of the alias group to delete.
+/// - `xdg` – XDG configuration reference.
+pub fn delete_alias_group(name: &str, xdg: &XDG) {
+    let mut config = Config::load(None, xdg).expect("Could not load config");
+    let alias = config.get_alias_group(name).expect("Could not find alias group");
+    trash::delete(&alias.path).expect("Could not delete alias group");
+    config.delete_alias_group(name).expect("Could not find alias group");
+    config.save(None, xdg).expect("Could not save config");
+}
+
+// BLOCKED: need to track aliases for each project in the project config since the system doesn't track it
+// pub fn set_project_alias_groups(name: &str, lib: Option<api_types::LibraryName>, alias_groups: Vec<String>, xdg: &XDG) {
+//     let mut config = Config::load(None, xdg).expect("Could not load config");
+//     let project_path = Path::new(config.get_lib_path(lib).expect("Could not find lib path")).join(name);
+
+// }
 
 /// Setup up the the data diroctory and config directory.
 pub use env_setup::setup_pm;

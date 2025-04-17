@@ -93,6 +93,10 @@ impl Config {
         self.alias_groups.as_ref().unwrap().get(name)
     }
 
+    pub fn delete_alias_group(&mut self, name: &str) -> Option<Alias> {
+        self.alias_groups.as_mut().unwrap().remove(name)
+    }
+
     pub fn add_lib(&mut self, name: types::LibraryName, path: &str, default: bool) {
         self.library_paths
             .as_mut()

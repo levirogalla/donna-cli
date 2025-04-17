@@ -9,7 +9,7 @@ use std::fs;
 use cli_project_manager::{define_project_type, XDG};
 use mlua::prelude::*;
 use mlua::Lua;
-use cli_project_manager::{create_alias_group, create_project, create_lib};
+use cli_project_manager::{create_alias_group, create_project, create_lib, update_alias_group};
 
 fn main() {
     handle_args(); // handles reset and setup commands
@@ -20,7 +20,10 @@ fn main() {
     define_project_type("test", Some(vec!["test".to_string()]), Some("/Users/levirogalla/Projects/lib/cli-project-manager/lua/builder.lua"), Some("/Users/levirogalla/Projects/lib/cli-project-manager/lua/opener.lua"), &xdg);
     // // create_lib("lib", "./test_root/lib", true, &xdg);
     create_project("testproj", Some("test"), None, None, &xdg);
-    open_project("testproj", None, &xdg);
+    // open_project("testproj", None, &xdg);
+
+    update_alias_group("test", Some("test2"), Some("./test_root/newtest"), &xdg);
+
     // let duration = start.elapsed(); // Measure elapsed time
     // println!("Elapsed time: {:.2?}", duration);
 
