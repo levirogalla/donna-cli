@@ -1,5 +1,5 @@
 use cli_project_manager::{
-  create_alias_group, untrack_alias_group, delete_alias_group, create_lib, create_project, define_project_type, setup_pm, update_alias_group, Alias, Config, ProjectConfig, XDG
+  create_alias_group, untrack_alias_group, delete_alias_group, create_lib, create_project, define_project_type, setup_pm, update_alias_group, AliasGroup, Config, ProjectConfig, XDG
 };
 use std::{
   env, fs, ops::Deref, path::{self, Path, PathBuf}
@@ -21,7 +21,7 @@ fn test_alias_group_update() {
 
     let home_dir_path = gen_test_home_path(unique_name);
     let alias_group_path1 = home_dir_path.join("group1");
-    create_alias_group("group1", alias_group_path1.to_str().unwrap(), &xdg);
+    create_alias_group("group1", alias_group_path1.to_str().unwrap(), false, &xdg);
     let alias_group_path2 = home_dir_path.join("group2");
     update_alias_group("group1", None, Some(alias_group_path2.to_str().unwrap()), &xdg);
 
@@ -34,7 +34,7 @@ fn test_alias_group_update() {
     assert!(alias_group.is_none(), "The old alias group name still exists");
 
     let alias_group_path3 = home_dir_path.join("group3");
-    create_alias_group("group3", alias_group_path3.to_str().unwrap(), &xdg);
+    create_alias_group("group3", alias_group_path3.to_str().unwrap(), false, &xdg);
     let alias_group_path4 = home_dir_path.join("group4");
     update_alias_group("group3", Some("group4"), Some(alias_group_path4.to_str().unwrap()), &xdg);
     assert!(alias_group_path4.exists(), "The updated alias group path does not exist");
@@ -54,7 +54,7 @@ fn test_untrack_alias_group() {
 
     let home_dir_path = gen_test_home_path(unique_name);
     let alias_group_path = home_dir_path.join("group1");
-    create_alias_group("group1", alias_group_path.to_str().unwrap(), &xdg);
+    create_alias_group("group1", alias_group_path.to_str().unwrap(), false, &xdg);
     untrack_alias_group("group1", &xdg);
 
     assert!(alias_group_path.exists(), "The alias group path doesn't exists");
@@ -72,8 +72,8 @@ fn test_delete_alias_group() {
     let home_dir_path = gen_test_home_path(unique_name);
     let alias_group_path = home_dir_path.join("group1");
     let alias_group_path2 = home_dir_path.join("group2");
-    create_alias_group("group1", alias_group_path.to_str().unwrap(), &xdg);
-    create_alias_group("group2", alias_group_path2.to_str().unwrap(), &xdg);
+    create_alias_group("group1", alias_group_path.to_str().unwrap(), false, &xdg);
+    create_alias_group("group2", alias_group_path2.to_str().unwrap(), false, &xdg);
     delete_alias_group("group1", &xdg);
 
     assert!(!alias_group_path.exists(), "The alias group path still exists");

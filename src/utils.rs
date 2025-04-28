@@ -2,7 +2,7 @@ use std::env;
 use std::path::Path;
 
 pub mod types {
-  pub type AliasName = String;
+  pub type AliasGroupName = String;
   pub type ProjectTypeName = String;
   pub type LibraryName = String;
 }

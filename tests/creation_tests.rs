@@ -1,5 +1,5 @@
 use cli_project_manager::{
-    create_alias_group, create_lib, create_project, define_project_type, setup_pm, Alias, Config,
+    create_alias_group, create_lib, create_project, define_project_type, setup_pm, AliasGroup, Config,
     ProjectConfig, XDG,
 };
 use std::{
@@ -39,7 +39,7 @@ fn test_create_project_no_alias_no_type() {
     let xdg = XDG::new(Some(unique_name));
     let _cleanup = setup_home(unique_name, &xdg);
 
-    create_project("test-proj", None, None, None, &xdg);
+    create_project("test-proj", None, None, None, false, &xdg);
 
     assert!(gen_test_data_home_path(unique_name)
         .join("project_manager/projects/test-proj")
@@ -65,7 +65,7 @@ fn test_create_alias_group() {
     let _cleanup = setup_home(unique_name, &xdg);
 
     let alias_group_path = gen_test_alias_groups_path(unique_name).join("t-alias");
-    create_alias_group("test-alias", alias_group_path.to_str().unwrap(), &xdg);
+    create_alias_group("test-alias", alias_group_path.to_str().unwrap(), false, &xdg);
 
     assert!(alias_group_path.exists());
 }
@@ -83,6 +83,7 @@ fn test_create_project_with_alias_and_lib() {
             .to_str()
             .unwrap(),
         false,
+        false,
         &xdg,
     );
 
@@ -90,20 +91,23 @@ fn test_create_project_with_alias_and_lib() {
     create_alias_group(
         "test-alias1",
         alias_group_path.join("a1").to_str().unwrap(),
+        false,
         &xdg,
     );
     create_alias_group(
         "test-alias2",
         alias_group_path.join("a2").to_str().unwrap(),
+        false,
         &xdg,
     );
 
-    create_project("test-proj1", None, Some("test-alias1"), None, &xdg);
+    create_project("test-proj1", None, Some("test-alias1"), None, false, &xdg);
     create_project(
         "test-proj2",
         None,
         Some("test-alias1"),
         Some("test-external-lib"),
+        false,
         &xdg,
     );
     create_project(
@@ -111,6 +115,7 @@ fn test_create_project_with_alias_and_lib() {
         None,
         Some("test-alias2"),
         Some("test-external-lib"),
+        false,
         &xdg,
     );
 
@@ -137,7 +142,7 @@ fn test_create_project_with_type() {
 
     define_project_type("test-project-type", None, None, None, &xdg);
 
-    create_project("test-proj", Some("test-project-type"), None, None, &xdg);
+    create_project("test-proj", Some("test-project-type"), None, None, false, &xdg);
 
     assert!(gen_test_data_home_path(unique_name)
         .join("project_manager/projects/test-proj")
@@ -172,6 +177,7 @@ fn test_create_projects_with_libs() {
             .to_str()
             .unwrap(),
         true,
+        false,
         &xdg,
     );
 
@@ -181,6 +187,7 @@ fn test_create_projects_with_libs() {
             .join("lib1")
             .to_str()
             .unwrap(),
+        false,
         false,
         &xdg,
     );
@@ -192,12 +199,13 @@ fn test_create_projects_with_libs() {
             .to_str()
             .unwrap(),
         false,
+        false,
         &xdg,
     );
 
-    create_project("default-proj", None, None, None, &xdg);
-    create_project("lib1-proj", None, None, Some("test-non-default-lib1"), &xdg);
-    create_project("lib2-proj", None, None, Some("test-non-default-lib2"), &xdg);
+    create_project("default-proj", None, None, None, false, &xdg);
+    create_project("lib1-proj", None, None, Some("test-non-default-lib1"), false, &xdg);
+    create_project("lib2-proj", None, None, Some("test-non-default-lib2"), false, &xdg);
 
     create_lib(
         "test-default-lib-override",
@@ -206,15 +214,17 @@ fn test_create_projects_with_libs() {
             .to_str()
             .unwrap(),
         true,
+        false,
         &xdg,
     );
 
-    create_project("default-proj-2", None, None, None, &xdg);
+    create_project("default-proj-2", None, None, None, false, &xdg);
     create_project(
         "old-default-proj",
         None,
         None,
         Some("test-default-lib"),
+        false,
         &xdg,
     );
 
@@ -233,13 +243,13 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
 
     let home_path = gen_test_home_path(unique_name);
     
-    create_lib("lib1", home_path.join("lib1").to_str().unwrap(), false, &xdg);
-    create_lib("lib2", home_path.join("lib2").to_str().unwrap(), false, &xdg);
-    create_lib("default", home_path.join("default").to_str().unwrap(), true, &xdg);
+    create_lib("lib1", home_path.join("lib1").to_str().unwrap(), false, false, &xdg);
+    create_lib("lib2", home_path.join("lib2").to_str().unwrap(), false, false, &xdg);
+    create_lib("default", home_path.join("default").to_str().unwrap(), true, false, &xdg);
 
-    create_alias_group("alias1", home_path.join("alias1").to_str().unwrap(), &xdg);
-    create_alias_group("alias2", home_path.join("alias2").to_str().unwrap(), &xdg);
-    create_alias_group("alias3", home_path.join("alias3").to_str().unwrap(), &xdg);
+    create_alias_group("alias1", home_path.join("alias1").to_str().unwrap(), false, &xdg);
+    create_alias_group("alias2", home_path.join("alias2").to_str().unwrap(), false, &xdg);
+    create_alias_group("alias3", home_path.join("alias3").to_str().unwrap(), false, &xdg);
 
     define_project_type("type1", Some(vec!["alias1".to_string(), "alias2".to_string()]), None, None, &xdg);
     define_project_type("type2", Some(vec!["alias3".to_string()]), None, None, &xdg);
@@ -271,6 +281,7 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
             project_type,
             alias_group,
             lib,
+            false,
             &xdg,
         );
 

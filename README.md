@@ -4,6 +4,11 @@
 
 The **Project Manager (PM)** is a command-line tool designed to help users manage and organize their projects on a computer. It allows users to create projects from templates (e.g., Python sandbox, MATLAB sandbox, Word documents), define custom configurations, and manage project aliases. The tool will also provide health checks to ensure project aliases and metadata are consistent. The PM will be highly customizable, allowing users to define their own project templates, commands, and workflows through a `.config` file and project-specific scripts.
 
+## Design Philosphies
+- Never cause breaking changes to projects inderectly, e.g. changing absolute paths
+- Never make the user reliant on the pm, it is just an extension to the OS file system, projects can still easily be manage via finder, etc
+- Never delete, always use system trash
+
 ---
 
 ## Features

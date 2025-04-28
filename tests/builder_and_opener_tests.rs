@@ -6,7 +6,7 @@ use utils::{
 
 use cli_project_manager::{
     create_alias_group, create_lib, create_project, define_project_type, open_project, setup_pm,
-    Alias, Config, ProjectConfig, XDG,
+    AliasGroup, Config, ProjectConfig, XDG,
 };
 
 use std::{fs, io::Write};
@@ -39,7 +39,7 @@ fn test_opener_with_only_defaults() {
         ),
         &xdg,
     );
-    create_project("test-proj", Some("test-type"), None, None, &xdg);
+    create_project("test-proj", Some("test-type"), None, None, false, &xdg);
 
     open_project("test-proj", None, &xdg);
 
@@ -108,11 +108,13 @@ fn test_opener() {
     create_alias_group(
         "test-group",
         home_dir_path.join("group").to_str().unwrap(),
+        false,
         &xdg,
     );
     create_lib(
         "test-lib",
         home_dir_path.join("test-lib").to_str().unwrap(),
+        false,
         false,
         &xdg,
     );
@@ -122,6 +124,7 @@ fn test_opener() {
         Some("test-type"),
         Some("test-group"),
         Some("test-lib"),
+        false, 
         &xdg,
     );
     open_project("test-proj", Some("test-lib"), &xdg);
@@ -185,7 +188,7 @@ fn test_builder_with_only_defaults() {
         ),
         &xdg,
     );
-    create_project("test-proj", Some("test-type"), None, None, &xdg);
+    create_project("test-proj", Some("test-type"), None, None, false, &xdg);
 
     open_project("test-proj", None, &xdg);
 
@@ -254,11 +257,13 @@ fn test_builder() {
     create_alias_group(
         "test-group",
         home_dir_path.join("group").to_str().unwrap(),
+        false,
         &xdg,
     );
     create_lib(
         "test-lib",
         home_dir_path.join("test-lib").to_str().unwrap(),
+        false,
         false,
         &xdg,
     );
@@ -268,6 +273,7 @@ fn test_builder() {
         Some("test-type"),
         Some("test-group"),
         Some("test-lib"),
+        false,
         &xdg,
     );
 

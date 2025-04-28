@@ -1,30 +1,148 @@
-mod config_io;
-mod env_setup;
-mod utils;
+use clap::{Parser, Subcommand};
+use cli_project_manager::{create_alias_group, create_project};
 
-use cli_project_manager::open_project;
-use env_setup::{handle_args, TEST_PROJECTS_PATH};
-use std::path::Path;
-use std::fs;
-use cli_project_manager::{define_project_type, XDG};
-use mlua::prelude::*;
-use mlua::Lua;
-use cli_project_manager::{create_alias_group, create_project, create_lib, update_alias_group};
+/// Simple program to greet a person
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    /// Name of the person to greet
+    #[arg(short, long)]
+    command_arg: Option<String>,
+
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand, Debug)]
+#[command(version, about, long_about = None)]
+enum Commands {
+    /// Create a new project, library, alias group, or project type
+    Create {
+        #[command(subcommand)]
+        entity: CreateEntity,
+    },
+    // /// List all projects
+    // List,
+    // /// Open a project
+    // Open {
+    //     /// Name of the project
+    //     name: String,
+    // },
+}
+
+#[derive(Subcommand, Debug)]
+#[command(version, about, long_about = None)]
+enum CreateEntity {
+    /// Create a new project
+    Project {
+        /// Name of the project
+        name: String,
+
+        /// Whether to create a new directory for the project or handoff an existing one to the pm
+        #[arg(short = 'H', long, default_value_t = false)]
+        handoff: bool,
+
+        /// Type of the project
+        #[arg(short='t', long)]
+        project_type: Option<String>,
+
+        /// Alias group for the project
+        #[arg(short='g', long)]
+        alias_group: Option<String>,
+
+        /// Library for the project
+        #[arg(short='l', long)]
+        library: Option<String>,
+    },
+
+    /// Create a new alias group
+    AliasGroup {
+        /// The internal name of the alias group
+        name: String,
+
+        /// Path to the alias group directory
+        path: String,
+
+        /// Whether to create a new directory for the group or handoff an existing one to the pm
+        #[arg(short = 'H', long, default_value_t = false)]
+        handoff: bool,
+
+    },
+
+    /// Create a new library
+    Lib {
+        /// The internal name of the library
+        name: String,
+
+        /// Path to the library directory
+        path: String,
+
+        /// Set the library as the default
+        #[arg(short, long, default_value_t = false)]
+        default: bool,
+
+        /// Whether to create a new directory for the project or handoff an existing one to the pm
+        #[arg(short = 'H', long, default_value_t = false)]
+        handoff: bool,
+    },
+
+    /// Create a new project type
+    ProjectType {
+        /// Name of the project type and project directory name
+        name: String,
+
+        /// Names of default alias group for the project type
+        default_groups: Option<Vec<String>>,
+
+        /// Path to the opener for the project type
+        #[arg(short, long)]
+        opener: Option<String>,
+        /// Path to the builder for the project type
+        #[arg(short, long)]
+        builder: Option<String>,
+    },
+}
+
 
 fn main() {
-    handle_args(); // handles reset and setup commands
+    let args = Cli::parse();
+    let xdg = cli_project_manager::XDG::new(None);
 
-    // let start = std::time::Instant::now();
-    let xdg = XDG::new(None);
-    create_alias_group("test", "./test_root/test", &xdg);
-    define_project_type("test", Some(vec!["test".to_string()]), Some("/Users/levirogalla/Projects/lib/cli-project-manager/lua/builder.lua"), Some("/Users/levirogalla/Projects/lib/cli-project-manager/lua/opener.lua"), &xdg);
-    // // create_lib("lib", "./test_root/lib", true, &xdg);
-    create_project("testproj", Some("test"), None, None, &xdg);
-    // open_project("testproj", None, &xdg);
-
-    update_alias_group("test", Some("test2"), Some("./test_root/newtest"), &xdg);
-
-    // let duration = start.elapsed(); // Measure elapsed time
-    // println!("Elapsed time: {:.2?}", duration);
-
+    match &args.command {
+        Commands::Create { entity } => match entity {
+            CreateEntity::Project {
+                name,
+                handoff,
+                project_type,
+                alias_group,
+                library,
+            } => {
+                create_project(name.as_str(), project_type.as_deref(), alias_group.as_deref(), library.as_deref(), *handoff, &xdg);
+            }
+            CreateEntity::AliasGroup { name, handoff, path } => {
+                create_alias_group(name.as_str(), path.as_str(), *handoff, &xdg);
+                // Handle alias group creation
+                println!("Creating alias group: {}", name);
+                println!("Handoff: {}", handoff);
+                println!("Path: {:?}", path);
+            }
+            CreateEntity::Lib { name, path, default, handoff } => {
+                // Handle library creation
+                println!("Creating library: {}", name);
+                println!("Path: {}", path);
+                println!("Default: {}", default);
+                println!("Handoff: {}", handoff);
+            }
+            CreateEntity::ProjectType { name, default_groups: default_alias_group_names, opener, builder } => {
+                // Handle project type creation
+                println!("Creating project type: {}", name);
+                println!("Default alias groups: {:?}", default_alias_group_names);
+                println!("Opener: {:?}", opener);
+                println!("Builder: {:?}", builder);
+            }
+        },
+    }
+    // for _ in 0..args.count {
+    //     println!("Hello {}!", args.name.as_ref().unwrap_or(&"World".to_string()));
+    // }
 }

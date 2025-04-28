@@ -1,8 +1,7 @@
 [alias]
-reset = "run -- reset"
-setup = "run -- setup"
-clean = "run -- clean"
-
+reset = "run --bin dev -- reset"
+setup = "run --bin dev -- setup"
+'run:clean' = "run --bin dev -- clean"
 
 [env]
 HOME = { value='/Users/levirogalla/Projects/lib/cli-project-manager/test_root', force=true }

@@ -1,6 +1,6 @@
 done - add support for project types, for example a project type can by python, but a python project can placed in Api or Ai alias group. The builder rules are specific to the project type, so if you make a python project the builder automatically creates a env, a basic project structure with a src dir, but this would be user defined, so it could be anything. NOTE: maybe all builders should be defined in the same file??? that would make everything a lot easier, or maybe the default builder file in in xdg_data and you can define other builder files individually or default to the same builder file, the builder file will be called with project name so you can match that, this would also allow you to re use logic, maybe use lua? idk neovim uses that so im sure its good for that kind of stuff, also an alias can have a default builder if non is specified, like the Python alias can have the default builder of a python type project
 
-done - decided not to because this would make it harder to move projects around freely out side of the project managerw - track created projects in a list somewhere, probably config will have a dict called project will be a map of project name to project paths, or maybe this isn't needed since the os has an api to find symlinks of the file, and we know all the lib paths, but make a function to list all the locations (alias groups) of a project, 
+done: decided not to because this would make it harder to move projects around freely out side of the project managerw - track created projects in a list somewhere, probably config will have a dict called project will be a map of project name to project paths, or maybe this isn't needed since the os has an api to find symlinks of the file, and we know all the lib paths, but make a function to list all the locations (alias groups) of a project, 
 
 done - it would need to save what builder to save the project type somewhere so it knows what builder to use, it can also expose a custom builder if you have an exception. it should store this per project in the .pm dir
 
@@ -13,7 +13,13 @@ blocked1: no easy way to find all aliases for a project - move a project from on
 done - un track alias group
 done - delete alias group
 
-blocker1: track aliases for each project in project config? maybe theres a better solution because for this solution if you move an alias group then all projects inside that alias group need to be updated
+blocked2: will not track individual alias locations, if you move it out of an alias group then it is on you to keep track of it - blocker1: track aliases for each project in project config? maybe theres a better solution because for this solution if you move an alias group then all projects inside that alias group need to be updated
+
+blocker2: track alias groups in .pm config dir
+
+delete project types, handle existing projects with that type
+
+if makeing a project that already exisits, like the path already exists, then ask the user if they want to just handoff the project to pm, maybe there can be a flag called auto handoff, this would probably be an error handling improvements, like create project can have a path exists error and the cli would catch that and then run define project instead of create project
 
 add ability to create an alias in a one off location when making a project, in the cli maybe you can make it so it creates an alias at ur current pwd
 

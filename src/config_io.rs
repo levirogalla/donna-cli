@@ -1,25 +1,28 @@
 use super::utils::{types, XDG};
+use clap::builder;
 use serde::{Deserialize, Serialize};
 use std::default;
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use std::{collections::HashMap, error::Error, fs};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Config {
     default_lib: Option<types::LibraryName>,
     library_paths: Option<HashMap<types::LibraryName, String>>,
-    alias_groups: Option<HashMap<types::AliasName, Alias>>,
+    alias_groups: Option<HashMap<types::AliasGroupName, AliasGroup>>,
     project_types: Option<HashMap<types::ProjectTypeName, ProjectType>>,
+    builders_path_prefix: Option<String>,
+    openers_path_prefix: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct Alias {
+pub struct AliasGroup {
     pub path: String,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ProjectType {
-    pub default_alias_groups: Option<Vec<types::AliasName>>,
+    pub default_alias_groups: Option<Vec<types::AliasGroupName>>,
     pub builder: Option<String>,
     pub opener: Option<String>,
 }
@@ -29,6 +32,7 @@ pub struct ProjectConfig {
     pub project_type: Option<types::ProjectTypeName>,
     pub opener: Option<String>,
     pub builder: Option<String>,
+    pub tracked_alias_groups: Option<Vec<types::AliasGroupName>>,
 }
 
 impl Config {
@@ -75,7 +79,7 @@ impl Config {
         Ok(())
     }
 
-    pub fn add_alias_group(&mut self, name: types::AliasName, alias: &Alias) {
+    pub fn add_alias_group(&mut self, name: types::AliasGroupName, alias: &AliasGroup) {
         match self.alias_groups {
             Some(ref mut alias_groups) => {
                 // lazy load alias_groups
@@ -89,11 +93,11 @@ impl Config {
         }
     }
 
-    pub fn get_alias_group(&self, name: &str) -> Option<&Alias> {
+    pub fn get_alias_group(&self, name: &str) -> Option<&AliasGroup> {
         self.alias_groups.as_ref().unwrap().get(name)
     }
 
-    pub fn delete_alias_group(&mut self, name: &str) -> Option<Alias> {
+    pub fn delete_alias_group(&mut self, name: &str) -> Option<AliasGroup> {
         self.alias_groups.as_mut().unwrap().remove(name)
     }
 
@@ -122,23 +126,31 @@ impl Config {
     pub fn add_project_type(
         &mut self,
         name: types::ProjectTypeName,
-        default_alias_groups: Option<Vec<types::AliasName>>,
+        default_alias_groups: Option<Vec<types::AliasGroupName>>,
         builder: Option<&str>,
         opener: Option<&str>,
     ) {
+        let builder_path_prefix = PathBuf::from(self.builders_path_prefix.as_deref().unwrap_or(""));
+        let opener_path_prefix = PathBuf::from(self.openers_path_prefix.as_deref().unwrap_or(""));
+        
+        let builder = builder
+            .map(|s| builder_path_prefix.join(s).to_str().unwrap().to_string());
+        let opener = opener
+            .map(|s| opener_path_prefix.join(s).to_str().unwrap().to_string());
+
         match self.project_types {
             Some(ref mut project_types) => {
                 // lazy load alias_groups
                 project_types.insert(
                     name.to_string(),
-                    ProjectType::new(default_alias_groups, builder, opener),
+                    ProjectType::new(default_alias_groups, builder.as_deref(), opener.as_deref()),
                 );
             }
             None => {
                 let mut project_types = HashMap::new();
                 project_types.insert(
                     name.to_string(),
-                    ProjectType::new(default_alias_groups, builder, opener),
+                    ProjectType::new(default_alias_groups, builder.as_deref(), opener.as_deref()),
                 );
                 self.project_types = Some(project_types);
             }
@@ -153,11 +165,26 @@ impl Config {
     }
 }
 
-impl Alias {
-    pub fn new(path: &str) -> Alias {
-        Alias {
+impl AliasGroup {
+    pub fn new(path: &str) -> AliasGroup {
+        AliasGroup {
             path: path.to_string(),
         }
+    }
+
+    pub fn get_project_configs(&self) -> Result<Vec<ProjectConfig>, ConfigError> {
+        let project_alias_configs: Vec<ProjectConfig> = fs::read_dir(&self.path)?
+            .filter_map(|entry| {
+                let entry = entry.ok()?;
+                let path = entry.path();
+                if path.is_dir() && path.is_symlink() {
+                    Some(ProjectConfig::load(path.join(ProjectConfig::PROJECT_ROOT_REL_PATH).to_str().unwrap()).unwrap())
+                } else {
+                    None
+                }
+            })
+            .collect();
+        Ok(project_alias_configs)
     }
 }
 
@@ -182,8 +209,10 @@ impl ProjectConfig {
         project_type: Option<types::ProjectTypeName>,
         opener: Option<String>,
         builder: Option<String>,
+        tracked_alias_groups: Option<Vec<String>>,
     ) -> ProjectConfig {
         ProjectConfig {
+            tracked_alias_groups,
             project_type,
             opener,
             builder,
@@ -211,6 +240,7 @@ impl Default for ProjectConfig {
         ProjectConfig {
             project_type: None,
             opener: None,
+            tracked_alias_groups: Some(vec![]),
             builder: None,
         }
     }
