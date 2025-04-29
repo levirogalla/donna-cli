@@ -1,5 +1,6 @@
+
 use cli_project_manager::{
-    create_alias_group, create_lib, create_project, define_project_type, ProjectConfig, XDG,
+    create_alias_group, create_lib, create_project, define_project_type, Config, ProjectConfig, XDG
 };
 mod utils;
 use utils::{
@@ -7,6 +8,7 @@ use utils::{
     gen_test_home_path, setup_home,
 };
 
+use std::path::{Path, PathBuf};
 use rand::prelude::*;
 
 #[test]
@@ -474,3 +476,25 @@ fn test_incorrect_usage() {
     // or creating a project with a lib that doesn't exist
 }
 // handle incorrect usage, like making two alias groups with the same name or libraries with the same name
+
+#[test]
+fn test_relative_paths_are_handled_properly() {
+    let unique_name = "test_relative_paths_are_handled_properly";
+    let xdg = XDG::new(Some(unique_name));
+    let mut _cleanup = setup_home(unique_name, &xdg);
+
+    let cwd = std::env::current_dir().unwrap();
+
+    gen_test_home_path(unique_name);
+    let test_home = Path::new("./tests/test_home_dirs").join(unique_name);
+    // make sure we are running tests from root dir
+    assert!(cwd.read_dir().unwrap().filter(|f| ["tests", "Cargo.toml", "src"].contains(&f.as_ref().unwrap().file_name().to_str().unwrap())).count() == 3);
+
+    create_lib("lib", test_home.join("lib").to_str().unwrap(), true, false, &xdg);
+    create_alias_group("group", test_home.join("group").to_str().unwrap(), false, &xdg);
+
+    let config = Config::load(None, &xdg).unwrap();
+    assert!(PathBuf::from(config.get_alias_group("group").unwrap().path.as_str()).is_absolute());
+    assert!(PathBuf::from(config.get_lib_path(Some("lib")).unwrap()).is_absolute());
+
+}

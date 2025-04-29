@@ -13,8 +13,9 @@ pub mod env_setup;
 mod utils; // re export for tests
 
 use mlua::Lua;
+use utils::to_full_path;
 use std::os::unix::fs::symlink;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::{collections::HashSet, fs};
 use trash;
 
@@ -67,16 +68,17 @@ pub fn define_project_type(
 /// - `xdg` – The XDG configuration reference.
 pub fn create_alias_group(name: &str, path: &str, already_exists: bool, xdg: &XDG) {
     let mut config = Config::load(None, xdg).expect("Could not load config");
+    let path = &to_full_path(path);
     if !already_exists {
-        if Path::new(path).exists() {
+        if path.exists() {
             panic!("Alias group already exists");
         }
         fs::create_dir_all(path).expect("Could not create folder");
     }
-    if !Path::new(path).exists() {
+    if !path.exists() {
         panic!("Alias group could not find alias group path");
     }
-    config.add_alias_group(name.to_string(), &AliasGroup::new(path));
+    config.add_alias_group(name.to_string(), &AliasGroup::new(path.to_str().unwrap()));
     config.save(None, xdg).expect("Could not save config");
 }
 
@@ -89,16 +91,17 @@ pub fn create_alias_group(name: &str, path: &str, already_exists: bool, xdg: &XD
 /// - `xdg` – XDG configuration reference.
 pub fn create_lib(name: &str, path: &str, default: bool, already_exists: bool, xdg: &XDG) {
     let mut config = Config::load(None, &xdg).expect("Could not load config");
+    let path = &to_full_path(path);
     if !already_exists {
-        if Path::new(path).exists() {
+        if path.exists() {
             panic!("Alias group already exists");
         }
         fs::create_dir_all(path).expect("Could not create folder");
     }
-    if !Path::new(path).exists() {
+    if !path.exists() {
         panic!("Alias group could not find alias group path");
     }
-    config.add_lib(name.to_string(), path, default);
+    config.add_lib(name.to_string(), path.to_str().unwrap(), default);
     if default {
         config.set_default_lib(name.to_string());
     }
@@ -233,16 +236,17 @@ pub fn open_project(name: &str, lib: Option<&str>, xdg: &XDG) {
 /// - `xdg` – XDG configuration reference.
 pub fn update_alias_group(name: &str, new_name: Option<&str>, new_path: Option<&str>, xdg: &XDG) {
     let mut config = Config::load(None, xdg).expect("Could not load config");
+    let new_path = new_path.map(|p| to_full_path(p));
     let alias = config
         .delete_alias_group(name)
         .expect("Could not find alias group");
-    let old_path = alias.path;
+    let old_path = PathBuf::from(alias.path);
     let updated_name = new_name.unwrap_or(name);
-    let updated_path = new_path.unwrap_or(&old_path);
-    if &old_path != updated_path {
+    let updated_path = new_path.as_ref().unwrap_or(&old_path);
+    if old_path != *updated_path {
         fs::rename(&old_path, updated_path).expect("Could not move alias group");
     }
-    config.add_alias_group(updated_name.to_string(), &AliasGroup::new(updated_path));
+    config.add_alias_group(updated_name.to_string(), &AliasGroup::new(updated_path.to_str().unwrap()));
     config.save(None, xdg).expect("Could not save config");
 }
 

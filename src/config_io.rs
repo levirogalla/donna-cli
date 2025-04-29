@@ -159,8 +159,7 @@ impl Config {
     pub fn get_project_type(&self, name: types::ProjectTypeName) -> Option<&ProjectType> {
         self.project_types
             .as_ref()
-            .expect("Tried to get undefined project type")
-            .get(&name)
+            .map(|project_types| project_types.get(&name)).flatten()
     }
 }
 

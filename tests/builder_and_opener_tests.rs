@@ -311,3 +311,4 @@ fn test_builder() {
     );
     assert_eq!(project_config.opener.as_deref(), None);
 }
+

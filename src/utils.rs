@@ -1,5 +1,5 @@
 use std::env;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub mod types {
   pub type AliasGroupName = String;
@@ -43,5 +43,16 @@ impl XDG {
                     .to_string()
             }
         }
+    }
+}
+
+
+pub fn to_full_path(path: &str) -> PathBuf {
+    let cwd = env::current_dir().unwrap();
+    let full_path = Path::new(path);
+    if full_path.is_absolute() {
+        full_path.to_path_buf()
+    } else {
+        cwd.join(full_path)
     }
 }
