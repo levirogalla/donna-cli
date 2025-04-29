@@ -21,7 +21,7 @@ pub fn get_config_path(xdg: &XDG) -> String {
 }
 
 pub fn get_data_path(xdg: &XDG) -> String {
-    Path::new(&xdg.get_data_home()).join("project_manager").to_str().unwrap().to_string()
+    Path::new(&xdg.get_data_home()).join("project_manager/projects").to_str().unwrap().to_string()
 }
 
 pub fn setup_pm(xdg: &XDG) {
@@ -53,11 +53,11 @@ fn reset_test_root() {
     }
 
     let config_dir = format!("{}/.config", TEST_ROOT_PATH);
-    let projects_dir = format!("{}/Projects/lib", TEST_ROOT_PATH);
+    let data_dir = format!("{}/.local/share", TEST_ROOT_PATH);
 
     let result = fs::remove_dir_all(TEST_ROOT_PATH)
         .and_then(|_| fs::create_dir_all(config_dir))
-        .and_then(|_| fs::create_dir_all(projects_dir));
+        .and_then(|_| fs::create_dir_all(data_dir));
 
     match result {
         Ok(_) => log::info!("Config directory removed"),

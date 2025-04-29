@@ -161,6 +161,16 @@ impl Config {
             .as_ref()
             .map(|project_types| project_types.get(&name)).flatten()
     }
+
+    pub fn get_libs(&self) -> Result<HashMap<types::LibraryName, String>, ConfigError> {
+        self.library_paths
+            .as_ref()
+            .ok_or(ConfigError {
+                message: "No library paths found".to_string(),
+            })
+            .map(|libs| libs.clone())
+    }
+
 }
 
 impl AliasGroup {

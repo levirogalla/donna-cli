@@ -13,12 +13,12 @@ pub mod env_setup;
 mod utils; // re export for tests
 
 use mlua::Lua;
-use utils::to_full_path;
 use std::collections::HashMap;
 use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
 use std::{collections::HashSet, fs};
 use trash;
+use utils::to_full_path;
 
 pub use config_io::{AliasGroup, Config, ProjectConfig};
 pub use utils::XDG;
@@ -56,6 +56,8 @@ pub fn define_project_type(
     let mut config = Config::load(None, xdg).expect("Could not load config");
     if !redefine && config.get_project_type(name.to_string()).is_some() {
         panic!("Project type already exists");
+    } else if redefine && !config.get_project_type(name.to_string()).is_some() {
+        panic!("Project type does not exist");
     }
     config.add_project_type(name.to_string(), default_alias_groups, builder, opener);
     config.save(None, xdg).expect("Could not save config");
@@ -133,16 +135,41 @@ pub fn create_project(
     let project_config_file_path = project_path.join(ProjectConfig::PROJECT_ROOT_REL_PATH);
     // let project_path = project_config_path.parent().expect("Invalid project config path");
 
-    let project_config_dir = project_config_file_path.parent().expect("Invalid project config path");
-    if already_exists {
-        fs::create_dir(project_config_dir).expect("Could not create project directory");
-    } else {
-        if project_path.exists() { panic!("Project already exists"); }
-        fs::create_dir_all(project_config_dir).expect("Could not create project directory");
-    }
-    
-    fs::File::create_new(&project_config_file_path).expect("Could not create project config file");
+    let project_config_dir = project_config_file_path
+        .parent()
+        .expect("Invalid project config path");
 
+    match (
+        already_exists,
+        project_config_dir.exists(),
+        project_config_file_path.exists(),
+    ) {
+        (false, false, false) => {
+            fs::create_dir_all(project_config_dir).expect("Could not create project directory");
+            fs::File::create_new(&project_config_file_path)
+                .expect("Could not create project config file");
+        }
+        (_, false, true) => {
+            panic!("Something weird happened, project config file exists but not the directory");
+        } // not possible
+        (false, true, false) | (false, true, true) => {
+            panic!("Project config directory and/or file already exists, set already_exists to true if this is intended");
+        }
+        (true, false, false) => {
+            fs::create_dir(project_config_dir).expect("Could not create project directory");
+            fs::File::create_new(&project_config_file_path)
+                .expect("Could not create project config file");
+        }
+        (true, true, false) => {
+            fs::File::create_new(&project_config_file_path)
+                .expect("Could not create project config file");
+        }
+        (true, true, true) => {
+            Config::load(project_config_file_path.to_str(), &xdg).is_err().then(|| {
+                panic!("Project config file already exists but is not valid, either fix the config file or delete it");
+            });
+        }
+    }
     let mut project_config = ProjectConfig::default();
 
     let mut project_alias_groups: HashSet<&str> = HashSet::new();
@@ -172,9 +199,11 @@ pub fn create_project(
                 .unwrap();
             globals.set("PM_PROJECT_TYPE", pt).unwrap();
             globals.set("PM_PROJECT_LIB", lib).unwrap();
-            if !already_exists { lua.load(fs::read_to_string(builder).expect("Could not find builder file"))
-                .exec()
-                .expect("Failed to run project builder") };
+            if !already_exists {
+                lua.load(fs::read_to_string(builder).expect("Could not find builder file"))
+                    .exec()
+                    .expect("Failed to run project builder")
+            };
             // TODO: maybe run clean up code here to delete the project dir if building it fails
         }
     }
@@ -182,7 +211,7 @@ pub fn create_project(
     for alias_group in project_alias_groups {
         let alias = config
             .get_alias_group(alias_group)
-            .expect("Could not find alias");
+            .expect("Could not find alias group");
         let alias_path = Path::new(&alias.path).join(name);
         project_config
             .tracked_alias_groups
@@ -247,7 +276,10 @@ pub fn update_alias_group(name: &str, new_name: Option<&str>, new_path: Option<&
     if old_path != *updated_path {
         fs::rename(&old_path, updated_path).expect("Could not move alias group");
     }
-    config.add_alias_group(updated_name.to_string(), &AliasGroup::new(updated_path.to_str().unwrap()));
+    config.add_alias_group(
+        updated_name.to_string(),
+        &AliasGroup::new(updated_path.to_str().unwrap()),
+    );
     config.save(None, xdg).expect("Could not save config");
 }
 
@@ -280,13 +312,45 @@ pub fn delete_alias_group(name: &str, xdg: &XDG) {
         .expect("Could not find alias group");
     config.save(None, xdg).expect("Could not save config");
 }
+/// Get all projects that are tracked by donna
+/// 
+/// # Arguments
+/// - `xdg` – XDG configuration reference.
+/// # Returns
+/// - A HashMap where the key is the project name and the value is a tuple containing (project type, lib, path)
+pub fn get_projects(xdg: &XDG) -> HashMap<String, (String, String, String)> {
+    let config = Config::load(None, xdg).expect("Could not load config");
+    // project_name -> (project_type, lib, path)
+    let mut all_projects_data: HashMap<String, (String, String, String)> = HashMap::new();
 
-pub fn list_projects() {
-    // project_name -> (project_type, lib, alias_group)
-    let projects: HashMap<&str, (&str, &str, &str)> = HashMap::new();
-
-    
-
+    for (lib_name, lib_path) in config.get_libs().unwrap().iter() {
+        let projects = Path::new(lib_path).read_dir().unwrap().filter_map(|f| {
+            f.as_ref()
+                .unwrap()
+                .file_type()
+                .unwrap()
+                .is_dir()
+                .then(|| f.unwrap())
+        });
+        for project in projects {
+            let project_name = project.file_name().to_string_lossy().to_string();
+            let project_config_path = project.path().join(ProjectConfig::PROJECT_ROOT_REL_PATH);
+            let project_config = ProjectConfig::load(project_config_path.to_str().unwrap())
+                .expect("Could not load project config");
+            all_projects_data.insert(
+                project_name,
+                (
+                    project_config
+                        .project_type
+                        .clone()
+                        .unwrap_or("".to_string()),
+                    lib_name.clone(),
+                    project.path().to_str().unwrap().to_string()
+                ),
+            );
+        }
+    }
+    all_projects_data
 }
 
 // BLOCKED: need to track aliases for each project in the project config since the system doesn't track it
