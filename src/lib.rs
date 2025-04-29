@@ -12,7 +12,6 @@ mod config_io;
 pub mod env_setup;
 mod utils; // re export for tests
 
-use mlua::prelude::*;
 use mlua::Lua;
 use std::os::unix::fs::symlink;
 use std::path::Path;
@@ -49,9 +48,13 @@ pub fn define_project_type(
     default_alias_groups: Option<Vec<String>>,
     builder: Option<&str>,
     opener: Option<&str>,
+    redefine: bool,
     xdg: &XDG,
 ) {
     let mut config = Config::load(None, xdg).expect("Could not load config");
+    if !redefine && config.get_project_type(name.to_string()).is_some() {
+        panic!("Project type already exists");
+    }
     config.add_project_type(name.to_string(), default_alias_groups, builder, opener);
     config.save(None, xdg).expect("Could not save config");
 }
@@ -64,10 +67,14 @@ pub fn define_project_type(
 /// - `xdg` – The XDG configuration reference.
 pub fn create_alias_group(name: &str, path: &str, already_exists: bool, xdg: &XDG) {
     let mut config = Config::load(None, xdg).expect("Could not load config");
-    if already_exists && !Path::new(path).exists() {
-        panic!("Library could not find library path");
-    } else {
+    if !already_exists {
+        if Path::new(path).exists() {
+            panic!("Alias group already exists");
+        }
         fs::create_dir_all(path).expect("Could not create folder");
+    }
+    if !Path::new(path).exists() {
+        panic!("Alias group could not find alias group path");
     }
     config.add_alias_group(name.to_string(), &AliasGroup::new(path));
     config.save(None, xdg).expect("Could not save config");
@@ -82,10 +89,14 @@ pub fn create_alias_group(name: &str, path: &str, already_exists: bool, xdg: &XD
 /// - `xdg` – XDG configuration reference.
 pub fn create_lib(name: &str, path: &str, default: bool, already_exists: bool, xdg: &XDG) {
     let mut config = Config::load(None, &xdg).expect("Could not load config");
-    if already_exists && !Path::new(path).exists() {
-        panic!("Library could not find library path");
-    } else {
+    if !already_exists {
+        if Path::new(path).exists() {
+            panic!("Alias group already exists");
+        }
         fs::create_dir_all(path).expect("Could not create folder");
+    }
+    if !Path::new(path).exists() {
+        panic!("Alias group could not find alias group path");
     }
     config.add_lib(name.to_string(), path, default);
     if default {

@@ -6,3 +6,4 @@ setup = "run --bin dev -- setup"
 [env]
 HOME = { value='/Users/levirogalla/Projects/lib/cli-project-manager/test_root', force=true }
 RUST_BACKTRACE='1'
+RUST_LOG='debug'

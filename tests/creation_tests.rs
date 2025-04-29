@@ -1,15 +1,10 @@
 use cli_project_manager::{
-    create_alias_group, create_lib, create_project, define_project_type, setup_pm, AliasGroup, Config,
-    ProjectConfig, XDG,
+    create_alias_group, create_lib, create_project, define_project_type, ProjectConfig, XDG,
 };
-use std::{
-    env, fs, ops::Deref, path::{self, Path, PathBuf}
-};
-
 mod utils;
 use utils::{
     gen_test_alias_groups_path, gen_test_config_home_path, gen_test_data_home_path,
-    gen_test_home_path, setup_home, TestDir,
+    gen_test_home_path, setup_home,
 };
 
 use rand::prelude::*;
@@ -65,7 +60,12 @@ fn test_create_alias_group() {
     let _cleanup = setup_home(unique_name, &xdg);
 
     let alias_group_path = gen_test_alias_groups_path(unique_name).join("t-alias");
-    create_alias_group("test-alias", alias_group_path.to_str().unwrap(), false, &xdg);
+    create_alias_group(
+        "test-alias",
+        alias_group_path.to_str().unwrap(),
+        false,
+        &xdg,
+    );
 
     assert!(alias_group_path.exists());
 }
@@ -129,9 +129,15 @@ fn test_create_project_with_alias_and_lib() {
         .join("lib/test-proj2")
         .exists());
 
-    assert!(alias_group_path.join("a1/test-proj1/.pm/project.toml").exists());
-    assert!(alias_group_path.join("a1/test-proj2/.pm/project.toml").exists());
-    assert!(alias_group_path.join("a2/test-proj3/.pm/project.toml").exists());
+    assert!(alias_group_path
+        .join("a1/test-proj1/.pm/project.toml")
+        .exists());
+    assert!(alias_group_path
+        .join("a1/test-proj2/.pm/project.toml")
+        .exists());
+    assert!(alias_group_path
+        .join("a2/test-proj3/.pm/project.toml")
+        .exists());
 }
 
 #[test]
@@ -140,9 +146,16 @@ fn test_create_project_with_type() {
     let xdg = XDG::new(Some(unique_name));
     let _cleanup = setup_home(unique_name, &xdg);
 
-    define_project_type("test-project-type", None, None, None, &xdg);
+    define_project_type("test-project-type", None, None, None, false, &xdg);
 
-    create_project("test-proj", Some("test-project-type"), None, None, false, &xdg);
+    create_project(
+        "test-proj",
+        Some("test-project-type"),
+        None,
+        None,
+        false,
+        &xdg,
+    );
 
     assert!(gen_test_data_home_path(unique_name)
         .join("project_manager/projects/test-proj")
@@ -204,8 +217,22 @@ fn test_create_projects_with_libs() {
     );
 
     create_project("default-proj", None, None, None, false, &xdg);
-    create_project("lib1-proj", None, None, Some("test-non-default-lib1"), false, &xdg);
-    create_project("lib2-proj", None, None, Some("test-non-default-lib2"), false, &xdg);
+    create_project(
+        "lib1-proj",
+        None,
+        None,
+        Some("test-non-default-lib1"),
+        false,
+        &xdg,
+    );
+    create_project(
+        "lib2-proj",
+        None,
+        None,
+        Some("test-non-default-lib2"),
+        false,
+        &xdg,
+    );
 
     create_lib(
         "test-default-lib-override",
@@ -228,11 +255,21 @@ fn test_create_projects_with_libs() {
         &xdg,
     );
 
-    assert!(gen_test_home_path(unique_name).join("lib-d/default-proj").exists());
-    assert!(gen_test_home_path(unique_name).join("lib-d/old-default-proj").exists());
-    assert!(gen_test_home_path(unique_name).join("lib1/lib1-proj").exists()); 
-    assert!(gen_test_home_path(unique_name).join("lib2/lib2-proj").exists());
-    assert!(gen_test_home_path(unique_name).join("lib-do/default-proj-2").exists());
+    assert!(gen_test_home_path(unique_name)
+        .join("lib-d/default-proj")
+        .exists());
+    assert!(gen_test_home_path(unique_name)
+        .join("lib-d/old-default-proj")
+        .exists());
+    assert!(gen_test_home_path(unique_name)
+        .join("lib1/lib1-proj")
+        .exists());
+    assert!(gen_test_home_path(unique_name)
+        .join("lib2/lib2-proj")
+        .exists());
+    assert!(gen_test_home_path(unique_name)
+        .join("lib-do/default-proj-2")
+        .exists());
 }
 
 #[test]
@@ -242,17 +279,57 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
     let _cleanup = setup_home(unique_name, &xdg);
 
     let home_path = gen_test_home_path(unique_name);
-    
-    create_lib("lib1", home_path.join("lib1").to_str().unwrap(), false, false, &xdg);
-    create_lib("lib2", home_path.join("lib2").to_str().unwrap(), false, false, &xdg);
-    create_lib("default", home_path.join("default").to_str().unwrap(), true, false, &xdg);
 
-    create_alias_group("alias1", home_path.join("alias1").to_str().unwrap(), false, &xdg);
-    create_alias_group("alias2", home_path.join("alias2").to_str().unwrap(), false, &xdg);
-    create_alias_group("alias3", home_path.join("alias3").to_str().unwrap(), false, &xdg);
+    create_lib(
+        "lib1",
+        home_path.join("lib1").to_str().unwrap(),
+        false,
+        false,
+        &xdg,
+    );
+    create_lib(
+        "lib2",
+        home_path.join("lib2").to_str().unwrap(),
+        false,
+        false,
+        &xdg,
+    );
+    create_lib(
+        "default",
+        home_path.join("default").to_str().unwrap(),
+        true,
+        false,
+        &xdg,
+    );
 
-    define_project_type("type1", Some(vec!["alias1".to_string(), "alias2".to_string()]), None, None, &xdg);
-    define_project_type("type2", Some(vec!["alias3".to_string()]), None, None, &xdg);
+    create_alias_group(
+        "alias1",
+        home_path.join("alias1").to_str().unwrap(),
+        false,
+        &xdg,
+    );
+    create_alias_group(
+        "alias2",
+        home_path.join("alias2").to_str().unwrap(),
+        false,
+        &xdg,
+    );
+    create_alias_group(
+        "alias3",
+        home_path.join("alias3").to_str().unwrap(),
+        false,
+        &xdg,
+    );
+
+    define_project_type(
+        "type1",
+        Some(vec!["alias1".to_string(), "alias2".to_string()]),
+        None,
+        None,
+        false,
+        &xdg,
+    );
+    define_project_type("type2", Some(vec!["alias3".to_string()]), None, None, false, &xdg);
 
     struct Project {
         name: String,
@@ -274,16 +351,15 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
         let alias_group = *alias_groups.choose(&mut rng).unwrap();
         let project_type = *project_types.choose(&mut rng).unwrap();
 
-        let project_name = format!("{}-{}-{}-{}", project_type.unwrap_or("default"), alias_group.unwrap_or("default"), lib.unwrap_or("default"), i);
-
-        create_project(
-            &project_name,
-            project_type,
-            alias_group,
-            lib,
-            false,
-            &xdg,
+        let project_name = format!(
+            "{}-{}-{}-{}",
+            project_type.unwrap_or("default"),
+            alias_group.unwrap_or("default"),
+            lib.unwrap_or("default"),
+            i
         );
+
+        create_project(&project_name, project_type, alias_group, lib, false, &xdg);
 
         created_projects.push(Project {
             name: project_name,
@@ -291,11 +367,12 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
             lib: lib.map(|s| s.to_string()),
             project_type: project_type.map(|s| s.to_string()),
         });
-    };
+    }
 
     for project in created_projects {
- 
-        let project_path = home_path.join(project.lib.as_deref().unwrap_or("default")).join(&project.name);
+        let project_path = home_path
+            .join(project.lib.as_deref().unwrap_or("default"))
+            .join(&project.name);
         assert!(project_path.exists(), "Project {} not found", project.name);
 
         let pm_config = ProjectConfig::load(
@@ -322,19 +399,55 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
                 assert!(home_path.join("alias3").join(&project.name).exists());
             }
             (None, Some(ref alias_group)) if alias_group == "alias1" => {
-                assert!(home_path.join("alias1").join(&project.name).join(".pm/project.toml").exists());
-                assert!(!home_path.join("alias2").join(&project.name).join(".pm/project.toml").exists());
-                assert!(!home_path.join("alias3").join(&project.name).join(".pm/project.toml").exists());
+                assert!(home_path
+                    .join("alias1")
+                    .join(&project.name)
+                    .join(".pm/project.toml")
+                    .exists());
+                assert!(!home_path
+                    .join("alias2")
+                    .join(&project.name)
+                    .join(".pm/project.toml")
+                    .exists());
+                assert!(!home_path
+                    .join("alias3")
+                    .join(&project.name)
+                    .join(".pm/project.toml")
+                    .exists());
             }
             (None, Some(ref alias_group)) if alias_group == "alias2" => {
-                assert!(!home_path.join("alias1").join(&project.name).join(".pm/project.toml").exists());
-                assert!(home_path.join("alias2").join(&project.name).join(".pm/project.toml").exists());
-                assert!(!home_path.join("alias3").join(&project.name).join(".pm/project.toml").exists());
+                assert!(!home_path
+                    .join("alias1")
+                    .join(&project.name)
+                    .join(".pm/project.toml")
+                    .exists());
+                assert!(home_path
+                    .join("alias2")
+                    .join(&project.name)
+                    .join(".pm/project.toml")
+                    .exists());
+                assert!(!home_path
+                    .join("alias3")
+                    .join(&project.name)
+                    .join(".pm/project.toml")
+                    .exists());
             }
             (None, Some(ref alias_group)) if alias_group == "alias3" => {
-                assert!(!home_path.join("alias1").join(&project.name).join(".pm/project.toml").exists());
-                assert!(!home_path.join("alias2").join(&project.name).join(".pm/project.toml").exists());
-                assert!(home_path.join("alias3").join(&project.name).join(".pm/project.toml").exists());
+                assert!(!home_path
+                    .join("alias1")
+                    .join(&project.name)
+                    .join(".pm/project.toml")
+                    .exists());
+                assert!(!home_path
+                    .join("alias2")
+                    .join(&project.name)
+                    .join(".pm/project.toml")
+                    .exists());
+                assert!(home_path
+                    .join("alias3")
+                    .join(&project.name)
+                    .join(".pm/project.toml")
+                    .exists());
             }
             (None, None) => {
                 assert!(!home_path.join("alias1").join(&project.name).exists());
@@ -342,11 +455,13 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
                 assert!(!home_path.join("alias3").join(&project.name).exists());
             }
             _ => {
-                println!("Case not tested: project_type: {:?}, alias_group: {:?}", project.project_type, project.alias_group);
+                println!(
+                    "Case not tested: project_type: {:?}, alias_group: {:?}",
+                    project.project_type, project.alias_group
+                );
             }
         }
     }
-
 }
 
 #[test]

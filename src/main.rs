@@ -1,13 +1,16 @@
 use clap::{Parser, Subcommand};
-use cli_project_manager::{create_alias_group, create_project};
+use cli_project_manager::{
+    create_alias_group, create_lib, create_project, define_project_type, env_setup,
+};
+use env_logger;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Cli {
     /// Name of the person to greet
-    #[arg(short, long)]
-    command_arg: Option<String>,
+    #[arg(long)]
+    verbose: bool,
 
     #[command(subcommand)]
     command: Commands,
@@ -43,15 +46,15 @@ enum CreateEntity {
         handoff: bool,
 
         /// Type of the project
-        #[arg(short='t', long)]
+        #[arg(short = 't', long)]
         project_type: Option<String>,
 
         /// Alias group for the project
-        #[arg(short='g', long)]
+        #[arg(short = 'g', long)]
         alias_group: Option<String>,
 
         /// Library for the project
-        #[arg(short='l', long)]
+        #[arg(short = 'l', long)]
         library: Option<String>,
     },
 
@@ -66,7 +69,6 @@ enum CreateEntity {
         /// Whether to create a new directory for the group or handoff an existing one to the pm
         #[arg(short = 'H', long, default_value_t = false)]
         handoff: bool,
-
     },
 
     /// Create a new library
@@ -100,13 +102,21 @@ enum CreateEntity {
         /// Path to the builder for the project type
         #[arg(short, long)]
         builder: Option<String>,
+
+        #[arg(short, long, default_value_t = false)]
+        redefine: bool,
     },
 }
 
-
 fn main() {
     let args = Cli::parse();
+    if args.verbose {
+        std::env::set_var("RUST_LOG", "debug");
+    }
+    env_logger::init();
+
     let xdg = cli_project_manager::XDG::new(None);
+    env_setup::setup_pm(&xdg);
 
     match &args.command {
         Commands::Create { entity } => match entity {
@@ -117,32 +127,46 @@ fn main() {
                 alias_group,
                 library,
             } => {
-                create_project(name.as_str(), project_type.as_deref(), alias_group.as_deref(), library.as_deref(), *handoff, &xdg);
+                create_project(
+                    name,
+                    project_type.as_deref(),
+                    alias_group.as_deref(),
+                    library.as_deref(),
+                    *handoff,
+                    &xdg,
+                );
             }
-            CreateEntity::AliasGroup { name, handoff, path } => {
-                create_alias_group(name.as_str(), path.as_str(), *handoff, &xdg);
-                // Handle alias group creation
-                println!("Creating alias group: {}", name);
-                println!("Handoff: {}", handoff);
-                println!("Path: {:?}", path);
+            CreateEntity::AliasGroup {
+                name,
+                handoff,
+                path,
+            } => {
+                create_alias_group(name, path.as_str(), *handoff, &xdg);
             }
-            CreateEntity::Lib { name, path, default, handoff } => {
-                // Handle library creation
-                println!("Creating library: {}", name);
-                println!("Path: {}", path);
-                println!("Default: {}", default);
-                println!("Handoff: {}", handoff);
+            CreateEntity::Lib {
+                name,
+                path,
+                default,
+                handoff,
+            } => {
+                create_lib(name, path, *default, *handoff, &xdg);
             }
-            CreateEntity::ProjectType { name, default_groups: default_alias_group_names, opener, builder } => {
-                // Handle project type creation
-                println!("Creating project type: {}", name);
-                println!("Default alias groups: {:?}", default_alias_group_names);
-                println!("Opener: {:?}", opener);
-                println!("Builder: {:?}", builder);
+            CreateEntity::ProjectType {
+                name,
+                default_groups,
+                opener,
+                builder,
+                redefine
+            } => {
+                define_project_type(
+                    name,
+                    default_groups.as_ref().map(|v| v.clone()),
+                    builder.as_deref(),
+                    opener.as_deref(),
+                    *redefine,
+                    &xdg,
+                );
             }
         },
     }
-    // for _ in 0..args.count {
-    //     println!("Hello {}!", args.name.as_ref().unwrap_or(&"World".to_string()));
-    // }
 }

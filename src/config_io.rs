@@ -1,8 +1,6 @@
 use super::utils::{types, XDG};
-use clap::builder;
 use serde::{Deserialize, Serialize};
-use std::default;
-use std::path::{PathBuf, Path};
+use std::path::PathBuf;
 use std::{collections::HashMap, error::Error, fs};
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -106,6 +104,9 @@ impl Config {
             .as_mut()
             .unwrap()
             .insert(name.to_string(), path.to_string());
+        if default {
+            self.set_default_lib(name);
+        }
     }
 
     pub fn set_default_lib(&mut self, name: types::LibraryName) {
@@ -132,11 +133,9 @@ impl Config {
     ) {
         let builder_path_prefix = PathBuf::from(self.builders_path_prefix.as_deref().unwrap_or(""));
         let opener_path_prefix = PathBuf::from(self.openers_path_prefix.as_deref().unwrap_or(""));
-        
-        let builder = builder
-            .map(|s| builder_path_prefix.join(s).to_str().unwrap().to_string());
-        let opener = opener
-            .map(|s| opener_path_prefix.join(s).to_str().unwrap().to_string());
+
+        let builder = builder.map(|s| builder_path_prefix.join(s).to_str().unwrap().to_string());
+        let opener = opener.map(|s| opener_path_prefix.join(s).to_str().unwrap().to_string());
 
         match self.project_types {
             Some(ref mut project_types) => {
@@ -178,7 +177,14 @@ impl AliasGroup {
                 let entry = entry.ok()?;
                 let path = entry.path();
                 if path.is_dir() && path.is_symlink() {
-                    Some(ProjectConfig::load(path.join(ProjectConfig::PROJECT_ROOT_REL_PATH).to_str().unwrap()).unwrap())
+                    Some(
+                        ProjectConfig::load(
+                            path.join(ProjectConfig::PROJECT_ROOT_REL_PATH)
+                                .to_str()
+                                .unwrap(),
+                        )
+                        .unwrap(),
+                    )
                 } else {
                     None
                 }

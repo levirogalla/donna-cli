@@ -6,6 +6,8 @@ default-run = "cli-project-manager"
 
 [dependencies]
 clap = { version = "4.5.27", features = ["derive"] }
+env_logger = "0.11.8"
+log = "0.4.27"
 mlua = { version = "0.10.3", features = ["lua54", "vendored"] }
 rand = "0.9.0"
 serde = { version = "1.0.217", features = ["derive"] }

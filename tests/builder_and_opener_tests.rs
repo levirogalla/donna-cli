@@ -1,12 +1,11 @@
 mod utils;
 use utils::{
-    gen_test_alias_groups_path, gen_test_config_home_path, gen_test_data_home_path,
-    gen_test_home_path, print_fs, setup_home,
+    gen_test_home_path, setup_home,
 };
 
 use cli_project_manager::{
-    create_alias_group, create_lib, create_project, define_project_type, open_project, setup_pm,
-    AliasGroup, Config, ProjectConfig, XDG,
+    create_alias_group, create_lib, create_project, define_project_type, open_project,
+    ProjectConfig, XDG,
 };
 
 use std::{fs, io::Write};
@@ -37,6 +36,7 @@ fn test_opener_with_only_defaults() {
                 .to_str()
                 .unwrap(),
         ),
+        false,
         &xdg,
     );
     create_project("test-proj", Some("test-type"), None, None, false, &xdg);
@@ -103,6 +103,7 @@ fn test_opener() {
                 .to_str()
                 .unwrap(),
         ),
+        false,
         &xdg,
     );
     create_alias_group(
@@ -186,6 +187,7 @@ fn test_builder_with_only_defaults() {
                 .to_str()
                 .unwrap(),
         ),
+        false,
         &xdg,
     );
     create_project("test-proj", Some("test-type"), None, None, false, &xdg);
@@ -252,6 +254,7 @@ fn test_builder() {
                 .unwrap(),
         ),
         None,
+        false,
         &xdg,
     );
     create_alias_group(

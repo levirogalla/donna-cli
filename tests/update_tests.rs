@@ -1,14 +1,10 @@
 use cli_project_manager::{
-  create_alias_group, untrack_alias_group, delete_alias_group, create_lib, create_project, define_project_type, setup_pm, update_alias_group, AliasGroup, Config, ProjectConfig, XDG
-};
-use std::{
-  env, fs, ops::Deref, path::{self, Path, PathBuf}
+  create_alias_group, untrack_alias_group, delete_alias_group, update_alias_group, Config, XDG
 };
 
 mod utils;
 use utils::{
-  gen_test_alias_groups_path, gen_test_config_home_path, gen_test_data_home_path,
-  gen_test_home_path, setup_home, TestDir,
+  gen_test_home_path, setup_home,
 };
 
 

@@ -3,6 +3,7 @@ use std::env;
 use std::fs;
 use std::process;
 use std::path::Path;
+use log;
 
 use super::utils::XDG;
 
@@ -33,14 +34,14 @@ pub fn setup_pm(xdg: &XDG) {
         (config_file_path.to_str().unwrap(), "Aliases", FS::File),
     ];
 
-    for (path, name, fs_type) in directories.iter() {
+    for (path, name, fs_type) in directories.iter().filter(|path| !Path::new(path.0).exists()) {
         let result = match fs_type {
             FS::Folder => fs::create_dir_all(path).map(|_| ()),
             FS::File => fs::File::create(path).map(|_| ()),
         };
         match result {
-            Ok(_) => println!("{} created", name),
-            Err(e) => println!("Error creating {}: {}", name, e),
+            Ok(_) => log::info!("{} path created at: {}", name, path),
+            Err(e) => log::error!("Error creating {}: {}", name, e),
         }
     } 
 }
@@ -59,8 +60,8 @@ fn reset_test_root() {
         .and_then(|_| fs::create_dir_all(projects_dir));
 
     match result {
-        Ok(_) => println!("Config directory removed"),
-        Err(e) => println!("Error removing config directory: {}", e),
+        Ok(_) => log::info!("Config directory removed"),
+        Err(e) => log::error!("Error removing config directory: {}", e),
     }
 }
 
