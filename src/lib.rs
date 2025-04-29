@@ -294,6 +294,25 @@ pub fn untrack_alias_group(name: &str, xdg: &XDG) {
         .delete_alias_group(name)
         .expect("Could not find alias group");
     config.save(None, xdg).expect("Could not save config");
+    let project = get_projects(&xdg);
+    for (_, (_, _, path)) in project.iter() {
+        let project_config_path = Path::new(path).join(ProjectConfig::PROJECT_ROOT_REL_PATH);
+        let mut project_config = ProjectConfig::load(project_config_path.to_str().unwrap())
+            .expect("Could not load project config");
+        if project_config
+            .tracked_alias_groups
+            .as_ref()
+            .unwrap()
+            .contains(&name.to_string())
+        {
+            println!("Deleting alias group from project {}", name);
+            let mut new_alias_groups = project_config.tracked_alias_groups.clone().unwrap();
+            new_alias_groups.retain(|x| x != name);
+            project_config.tracked_alias_groups = Some(new_alias_groups);
+            project_config.save(&project_config_path.to_str().unwrap())
+                .expect("Could not save project config");
+        }
+    }
 }
 
 /// Delete an alias group and move it to system trash.
@@ -302,15 +321,12 @@ pub fn untrack_alias_group(name: &str, xdg: &XDG) {
 /// - `name` – The name of the alias group to delete.
 /// - `xdg` – XDG configuration reference.
 pub fn delete_alias_group(name: &str, xdg: &XDG) {
-    let mut config = Config::load(None, xdg).expect("Could not load config");
+    let config = Config::load(None, xdg).expect("Could not load config");
     let alias = config
         .get_alias_group(name)
         .expect("Could not find alias group");
     trash::delete(&alias.path).expect("Could not delete alias group");
-    config
-        .delete_alias_group(name)
-        .expect("Could not find alias group");
-    config.save(None, xdg).expect("Could not save config");
+    untrack_alias_group(name, xdg);
 }
 /// Get all projects that are tracked by donna
 /// 
