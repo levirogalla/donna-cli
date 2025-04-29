@@ -14,6 +14,7 @@ mod utils; // re export for tests
 
 use mlua::Lua;
 use utils::to_full_path;
+use std::collections::HashMap;
 use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
 use std::{collections::HashSet, fs};
@@ -278,6 +279,14 @@ pub fn delete_alias_group(name: &str, xdg: &XDG) {
         .delete_alias_group(name)
         .expect("Could not find alias group");
     config.save(None, xdg).expect("Could not save config");
+}
+
+pub fn list_projects() {
+    // project_name -> (project_type, lib, alias_group)
+    let projects: HashMap<&str, (&str, &str, &str)> = HashMap::new();
+
+    
+
 }
 
 // BLOCKED: need to track aliases for each project in the project config since the system doesn't track it

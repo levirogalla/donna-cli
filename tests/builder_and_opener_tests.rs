@@ -3,7 +3,7 @@ use utils::{
     gen_test_home_path, setup_home,
 };
 
-use cli_project_manager::{
+use donna::{
     create_alias_group, create_lib, create_project, define_project_type, open_project,
     ProjectConfig, XDG,
 };

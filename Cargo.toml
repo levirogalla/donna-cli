@@ -1,8 +1,8 @@
 [package]
-name = "cli-project-manager"
+name = "donna"
 version = "0.1.0"
 edition = "2021"
-default-run = "cli-project-manager"
+default-run = "donna"
 
 [dependencies]
 clap = { version = "4.5.27", features = ["derive"] }

@@ -2,7 +2,7 @@
 // mod env_setup;
 // mod utils;
 
-use cli_project_manager::{
+use donna::{
     create_alias_group, create_project, define_project_type, env_setup::handle_args,
     update_alias_group, XDG,
 };

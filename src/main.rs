@@ -1,14 +1,13 @@
 use clap::{Parser, Subcommand};
-use cli_project_manager::{
+use donna::{
     create_alias_group, create_lib, create_project, define_project_type, env_setup,
 };
 use env_logger;
 
-/// Simple program to greet a person
+/// Hi, I'm Donna, the best project manager, ever!
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    /// Name of the person to greet
     #[arg(long)]
     verbose: bool,
 
@@ -24,6 +23,31 @@ enum Commands {
         #[command(subcommand)]
         entity: CreateEntity,
     },
+
+    /// List all projects, libraries, alias groups, or project types
+    List {
+        #[command(subcommand)]
+        list: ListEntity,
+    },
+
+    /// Import a library and all projects in it
+    Import {
+        // Library name
+        name: String,
+
+        /// Path to the library directory
+        path: String,
+
+        /// Set the library as the default
+        #[arg(short='d', long, default_value_t = false)]
+        default: bool, 
+
+        #[arg(short='t', long)]
+        project_type: Option<String>,
+    },
+
+    /// Delete a project, library, alias group, project type
+    Delete
     // /// List all projects
     // List,
     // /// Open a project
@@ -108,6 +132,27 @@ enum CreateEntity {
     },
 }
 
+
+#[derive(Subcommand, Debug)]
+#[command(version, about, long_about = None)]
+enum ListEntity {
+    /// List all projects
+    Projects {
+        /// Whether to list the projects in a specific library
+        #[arg(short, long)]
+        library: Option<String>,
+    },
+
+    /// List all libraries
+    Libraries {},
+
+    /// List all alias groups
+    AliasGroups {},
+
+    /// List all project types
+    ProjectTypes {},
+}
+
 fn main() {
     let args = Cli::parse();
     if args.verbose {
@@ -115,7 +160,7 @@ fn main() {
     }
     env_logger::init();
 
-    let xdg = cli_project_manager::XDG::new(None);
+    let xdg = donna::XDG::new(None);
     env_setup::setup_pm(&xdg);
 
     match &args.command {
@@ -168,5 +213,31 @@ fn main() {
                 );
             }
         },
+        Commands::List { list } => match list {
+            _ => {}
+        }
+
+        Commands::Import { name, path, default, project_type } => {
+            create_lib(name, path, *default, true, &xdg);
+            let dir_items = std::fs::read_dir(path).unwrap();
+            for item in dir_items.flatten() {
+                let path = item.path();
+                if !path.is_dir() {
+                    continue;
+                }
+                let project_name = path.file_name().unwrap().to_str().unwrap();
+                create_project(
+                    project_name,
+                    project_type.as_deref(),
+                    None,
+                    Some(name),
+                    true,
+                    &xdg,
+                );
+            }
+        }
+        Commands::Delete => {
+            // delete_project(name, &xdg);
+        }
     }
 }

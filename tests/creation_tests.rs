@@ -1,5 +1,5 @@
 
-use cli_project_manager::{
+use donna::{
     create_alias_group, create_lib, create_project, define_project_type, Config, ProjectConfig, XDG
 };
 mod utils;

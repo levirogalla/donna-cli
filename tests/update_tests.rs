@@ -1,4 +1,4 @@
-use cli_project_manager::{
+use donna::{
   create_alias_group, untrack_alias_group, delete_alias_group, update_alias_group, Config, XDG
 };
 

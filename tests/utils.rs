@@ -4,7 +4,7 @@ use std::fs;
 use std::path::{PathBuf, Path};
 use std::env;
 
-use cli_project_manager::{setup_pm, XDG};
+use donna::{setup_pm, XDG};
 
 
 /// A test directory that is deleted when it goes out of scope
