@@ -15,7 +15,6 @@ pub mod utils; // re export for tests
 use config_io::{ProjectType};
 use mlua::Lua;
 use std::collections::HashMap;
-use std::ops::Deref;
 use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
 use std::{collections::HashSet, fs};

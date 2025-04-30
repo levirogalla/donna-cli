@@ -8,8 +8,8 @@ use donna::{
 use rand::prelude::*;
 use std::{fs, io::Write, path::Path};
 use utils::{
-    gen_test_alias_groups_path, gen_test_config_home_path, gen_test_data_home_path,
-    gen_test_home_path, setup_home, print_fs,
+    gen_test_data_home_path,
+    gen_test_home_path, setup_home,
 };
 
 // Comprehensive API functionality tests
@@ -760,7 +760,7 @@ fn test_config_operations() {
     let _cleanup = setup_home(unique_name, &xdg);
     
     // Load the initial config
-    let mut config = Config::load(None, &xdg).unwrap();
+    let config = Config::load(None, &xdg).unwrap();
     
     // Add an alias group
     let home_path = gen_test_home_path(unique_name);

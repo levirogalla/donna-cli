@@ -1,7 +1,6 @@
 use super::utils::{types, XDG};
-use git2::{Repository, Signature};
 use serde::{Deserialize, Serialize};
-use std::path::{PathBuf, Path};
+use std::path::PathBuf;
 use std::{collections::HashMap, error::Error, fs};
 
 #[derive(Deserialize, Serialize, Debug)]

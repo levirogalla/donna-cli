@@ -2,7 +2,7 @@ use std::io::Write;
 
 use clap::{Parser, Subcommand};
 use donna::{
-    create_alias_group, create_lib, create_project, define_project_type, env_setup, get_alias_groups, get_libraries, get_project_types, get_projects, set_builders_path_prefix, set_default_lib, set_openers_path_prefix, untrack_alias_group, untrack_library, untrack_project_type, utils, Config
+    create_alias_group, create_lib, create_project, define_project_type, env_setup, get_alias_groups, get_libraries, get_project_types, get_projects, set_builders_path_prefix, set_default_lib, set_openers_path_prefix, untrack_alias_group, untrack_library, untrack_project_type, utils
 };
 use env_logger;
 
