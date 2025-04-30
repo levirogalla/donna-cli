@@ -207,13 +207,11 @@ impl Config {
             .map(|alias_groups| alias_groups.clone())
     }
 
-    pub fn get_project_types(&self) -> Result<HashMap<types::ProjectTypeName, ProjectType>, ConfigError> {
+    pub fn get_project_types(&self) -> HashMap<types::ProjectTypeName, ProjectType> {
         self.project_types
             .as_ref()
-            .ok_or(ConfigError {
-                message: "No project types found".to_string(),
-            })
             .map(|project_types| project_types.clone())
+            .unwrap_or_else(HashMap::new)
     }
 }
 

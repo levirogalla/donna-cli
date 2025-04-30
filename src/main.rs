@@ -2,7 +2,10 @@ use std::io::Write;
 
 use clap::{Parser, Subcommand};
 use donna::{
-    create_alias_group, create_lib, create_project, define_project_type, env_setup, get_alias_groups, get_libraries, get_project_types, get_projects, set_builders_path_prefix, set_default_lib, set_openers_path_prefix, untrack_alias_group, untrack_library, untrack_project_type, utils
+    create_alias_group, create_lib, create_project, define_project_type, env_setup,
+    get_alias_groups, get_libraries, get_project_path, get_project_types, get_projects,
+    open_project, set_builders_path_prefix, set_default_lib, set_openers_path_prefix,
+    untrack_alias_group, untrack_library, untrack_project_type, utils,
 };
 use env_logger;
 
@@ -57,6 +60,11 @@ enum Commands {
     Set {
         #[command(subcommand)]
         option: SetOption,
+    },
+
+    Open {
+        #[command(subcommand)]
+        entity: OpenEntity,
     },
 
     /// Delete a project, library, alias group, project type
@@ -224,6 +232,23 @@ enum ForgetEntity {
     },
 }
 
+#[derive(Subcommand, Debug)]
+#[command(version, about, long_about = None)]
+enum OpenEntity {
+    /// Open a project
+    Project {
+        /// Name of the project
+        name: String,
+
+        /// Library to open the project with
+        #[arg(short = 'l', long)]
+        lib: Option<String>,
+
+        /// Library to open the project with
+        #[arg(short = 't', long, default_value_t = false)]
+        terminal: bool,
+    },
+}
 
 fn main() {
     let args = Cli::parse();
@@ -384,7 +409,12 @@ fn main() {
                         ]
                     })
                     .collect();
-                let headers = vec!["Name".to_string(), "Builder".to_string(), "Opener".to_string(), "Default Groups".to_string()];
+                let headers = vec![
+                    "Name".to_string(),
+                    "Builder".to_string(),
+                    "Opener".to_string(),
+                    "Default Groups".to_string(),
+                ];
                 utils::pretty_print_table(rows, headers);
             }
         },
@@ -454,6 +484,22 @@ fn main() {
             }
         },
 
+        Commands::Open { entity } => match entity {
+            OpenEntity::Project {
+                name,
+                lib,
+                terminal,
+            } => match terminal {
+                true => {
+                    let path = get_project_path(name, lib.as_deref(), &xdg);
+                    println!("{}", path.to_str().unwrap());
+                }
+                false => {
+                    open_project(name, lib.as_deref(), &xdg);
+                }
+            },
+        },
+
         Commands::Delete => {
             // delete_project(name, &xdg);
         }
@@ -478,7 +524,6 @@ fn main() {
                     println!("Project type '{}' not found.", name);
                 }
             }
-            
-        }
+        },
     }
 }

@@ -258,6 +258,12 @@ pub fn open_project(name: &str, lib: Option<&str>, xdg: &XDG) {
     }
 }
 
+pub fn get_project_path(name: &str, lib: Option<&str>, xdg: &XDG) -> PathBuf {
+        let config = Config::load(None, xdg).expect("Could not load config");
+        Path::new(config.get_lib_path(lib).expect("Could not find lib path")).join(name)
+}
+
+
 /// To update alias group name and move alias group to a new location.
 ///
 /// # Arguments
@@ -443,7 +449,7 @@ pub fn get_alias_groups(xdg: &XDG) -> HashMap<String, AliasGroup> {
 /// - `xdg` – XDG configuration reference.
 pub fn get_project_types(xdg: &XDG) -> HashMap<String, ProjectType> {
     let config = Config::load(None, xdg).expect("Could not load config");
-    config.get_project_types().unwrap()
+    config.get_project_types()
 }
 
 pub fn set_builders_path_prefix(path: &str, xdg: &XDG) {
@@ -469,7 +475,6 @@ pub fn set_default_lib(name: &str, xdg: &XDG) {
     config.set_default_lib(name.to_string());
     config.save(None, xdg).expect("Could not save config");
 }
-
 
 
 // BLOCKED: need to track aliases for each project in the project config since the system doesn't track it
