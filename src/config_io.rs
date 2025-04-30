@@ -1,6 +1,7 @@
 use super::utils::{types, XDG};
+use git2::{Repository, Signature};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use std::{collections::HashMap, error::Error, fs};
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -33,14 +34,20 @@ pub struct ProjectConfig {
     pub tracked_alias_groups: Option<Vec<types::AliasGroupName>>,
 }
 
+pub struct SimpleHistory {
+    snapshot_dir: PathBuf,
+    manifest_path: PathBuf,
+}
+
 impl Config {
     const RC_REL_PATH: &'static str = "project_manager/config.toml";
+    const REL_DATA_DIR: &'static str = "project_manager";
 
     // use dependency injection for xdg to allow for parellel testing (multiple instances of XDG and home env var names)
     pub fn load(path: Option<&str>, xdg: &XDG) -> Result<Config, ConfigError> {
         let contents = fs::read_to_string(
             path.map(PathBuf::from)
-                .unwrap_or_else(|| PathBuf::from(xdg.get_config_home()).join(Self::RC_REL_PATH)),
+                .unwrap_or_else(|| Self::get_path(xdg)),
         )?;
 
         let mut config: Config = toml::from_str(&contents).unwrap();
@@ -56,13 +63,18 @@ impl Config {
             .entry("default".to_string())
             .or_insert_with(|| {
                 PathBuf::from(xdg.get_data_home())
-                    .join("project_manager/projects")
+                    .join(Self::REL_DATA_DIR)
+                    .join("projects")
                     .to_str()
                     .unwrap()
                     .to_string()
             });
 
         Ok(config)
+    }
+
+    pub fn get_path(xdg: &XDG) -> PathBuf {
+        PathBuf::from(xdg.get_config_home()).join(Self::RC_REL_PATH)
     }
 
     pub fn save(&self, path: Option<&str>, xdg: &XDG) -> Result<(), ConfigError> {
@@ -107,6 +119,10 @@ impl Config {
         if default {
             self.set_default_lib(name);
         }
+    }
+
+    pub fn delete_lib(&mut self, name: &str) -> Option<String> {
+        self.library_paths.as_mut().unwrap().remove(name)
     }
 
     pub fn set_default_lib(&mut self, name: types::LibraryName) {
@@ -156,6 +172,10 @@ impl Config {
         }
     }
 
+    pub fn delete_project_type(&mut self, name: &str) -> Option<ProjectType> {
+        self.project_types.as_mut().unwrap().remove(name)
+    }
+
     pub fn get_project_type(&self, name: types::ProjectTypeName) -> Option<&ProjectType> {
         self.project_types
             .as_ref()
@@ -171,6 +191,31 @@ impl Config {
             .map(|libs| libs.clone())
     }
 
+    pub fn set_builders_path_prefix(&mut self, path: &str) {
+        self.builders_path_prefix = Some(path.to_string());
+    }
+
+    pub fn set_openers_path_prefix(&mut self, path: &str) {
+        self.openers_path_prefix = Some(path.to_string());
+    }
+
+    pub fn get_alias_groups(&self) -> Result<HashMap<types::AliasGroupName, AliasGroup>, ConfigError> {
+        self.alias_groups
+            .as_ref()
+            .ok_or(ConfigError {
+                message: "No alias groups found".to_string(),
+            })
+            .map(|alias_groups| alias_groups.clone())
+    }
+
+    pub fn get_project_types(&self) -> Result<HashMap<types::ProjectTypeName, ProjectType>, ConfigError> {
+        self.project_types
+            .as_ref()
+            .ok_or(ConfigError {
+                message: "No project types found".to_string(),
+            })
+            .map(|project_types| project_types.clone())
+    }
 }
 
 impl AliasGroup {

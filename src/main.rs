@@ -2,7 +2,7 @@ use std::io::Write;
 
 use clap::{Parser, Subcommand};
 use donna::{
-    create_alias_group, create_lib, create_project, define_project_type, env_setup, get_projects,
+    create_alias_group, create_lib, create_project, define_project_type, env_setup, get_alias_groups, get_libraries, get_project_types, get_projects, set_builders_path_prefix, set_default_lib, set_openers_path_prefix, untrack_alias_group, untrack_library, untrack_project_type, utils, Config
 };
 use env_logger;
 
@@ -29,7 +29,7 @@ enum Commands {
     /// List all projects, libraries, alias groups, or project types
     List {
         #[command(subcommand)]
-        list: ListEntity,
+        entity: ListEntity,
     },
 
     /// Import a library and all projects in it
@@ -53,6 +53,12 @@ enum Commands {
         yes: bool,
     },
 
+    /// Set configuration options
+    Set {
+        #[command(subcommand)]
+        option: SetOption,
+    },
+
     /// Delete a project, library, alias group, project type
     Delete, // /// List all projects
     // List,
@@ -61,7 +67,10 @@ enum Commands {
     //     /// Name of the project
     //     name: String,
     // },
-    Forget,
+    Forget {
+        #[command(subcommand)]
+        entity: ForgetEntity,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -171,6 +180,51 @@ enum ListEntity {
     ProjectTypes {},
 }
 
+#[derive(Subcommand, Debug)]
+#[command(version, about, long_about = None)]
+enum SetOption {
+    /// Set the default library
+    DefaultLib {
+        /// Name of the library
+        name: String,
+    },
+
+    /// Builder path prefix
+    BuildersPath {
+        /// Path to the builders directory
+        path: String,
+    },
+
+    /// Opener path prefix
+    OpenersPath {
+        /// Path to the openers directory
+        path: String,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+#[command(version, about, long_about = None)]
+enum ForgetEntity {
+    /// Forget about an alias group
+    AliasGroup {
+        /// Name of the alias group
+        name: String,
+    },
+
+    /// Forget about a library
+    Library {
+        /// Name of the library
+        name: String,
+    },
+
+    /// Forget about a project type
+    ProjectType {
+        /// Name of the project type
+        name: String,
+    },
+}
+
+
 fn main() {
     let args = Cli::parse();
     if args.verbose {
@@ -231,7 +285,7 @@ fn main() {
                 );
             }
         },
-        Commands::List { list } => match list {
+        Commands::List { entity: list } => match list {
             ListEntity::Projects {
                 libs,
                 paths,
@@ -294,46 +348,45 @@ fn main() {
                     rows.push(row);
                 }
 
-                // Compute max width for each column
-                let mut col_widths: Vec<usize> = headers
-                    .iter()
-                    .map(|h| h.len())
-                    .collect();
-
-                for row in &rows {
-                    for (i, cell) in row.iter().enumerate() {
-                        if cell.len() > col_widths[i] {
-                            col_widths[i] = cell.len();
-                        }
-                    }
-                }
-
-                // Print header
-                let header_row: Vec<String> = headers
-                    .iter()
-                    .enumerate()
-                    .map(|(i, h)| format!("{:width$}", h, width = col_widths[i]))
-                    .collect();
-                println!("{}", header_row.join(" | "));
-
-                // Print separator
-                let sep_row: Vec<String> = col_widths
-                    .iter()
-                    .map(|w| "-".repeat(*w))
-                    .collect();
-                println!("{}", sep_row.join("-|-"));
-
-                // Print rows
-                for row in rows {
-                    let padded_row: Vec<String> = row
-                        .iter()
-                        .enumerate()
-                        .map(|(i, cell)| format!("{:width$}", cell, width = col_widths[i]))
-                        .collect();
-                    println!("{}", padded_row.join(" | "));
-                }
+                utils::pretty_print_table(rows, headers);
             }
-            _ => {}
+
+            ListEntity::Libraries {} => {
+                let rows: Vec<Vec<String>> = get_libraries(&xdg)
+                    .iter()
+                    .map(|(name, path)| vec![name.clone(), path.clone()])
+                    .collect();
+                let headers = vec!["Name".to_string(), "Path".to_string()];
+                utils::pretty_print_table(rows, headers);
+            }
+
+            ListEntity::AliasGroups {} => {
+                let rows: Vec<Vec<String>> = get_alias_groups(&xdg)
+                    .iter()
+                    .map(|(name, group)| vec![name.clone(), group.path.clone()])
+                    .collect();
+                let headers = vec!["Name".to_string(), "Path".to_string()];
+                utils::pretty_print_table(rows, headers);
+            }
+
+            ListEntity::ProjectTypes {} => {
+                let rows: Vec<Vec<String>> = get_project_types(&xdg)
+                    .iter()
+                    .map(|(name, pt)| {
+                        vec![
+                            name.clone(),
+                            pt.builder.clone().unwrap_or("".to_string()),
+                            pt.opener.clone().unwrap_or("".to_string()),
+                            pt.default_alias_groups
+                                .clone()
+                                .map(|v| v.join(", "))
+                                .unwrap_or("".to_string()),
+                        ]
+                    })
+                    .collect();
+                let headers = vec!["Name".to_string(), "Builder".to_string(), "Opener".to_string(), "Default Groups".to_string()];
+                utils::pretty_print_table(rows, headers);
+            }
         },
 
         Commands::Import {
@@ -388,12 +441,44 @@ fn main() {
                 );
             }
         }
+
+        Commands::Set { option } => match option {
+            SetOption::DefaultLib { name } => {
+                set_default_lib(name, &xdg);
+            }
+            SetOption::BuildersPath { path } => {
+                set_builders_path_prefix(path, &xdg);
+            }
+            SetOption::OpenersPath { path } => {
+                set_openers_path_prefix(path, &xdg);
+            }
+        },
+
         Commands::Delete => {
             // delete_project(name, &xdg);
         }
 
-        Commands::Forget => {
-            // forget_project(name, &xdg);
+        Commands::Forget { entity } => match entity {
+            ForgetEntity::AliasGroup { name } => {
+                untrack_alias_group(name, &xdg);
+            }
+            ForgetEntity::Library { name } => {
+                let libraries = get_libraries(&xdg);
+                if libraries.contains_key(name) {
+                    untrack_library(name, &xdg);
+                } else {
+                    println!("Library '{}' not found.", name);
+                }
+            }
+            ForgetEntity::ProjectType { name } => {
+                let project_types = get_project_types(&xdg);
+                if project_types.contains_key(name) {
+                    untrack_project_type(name, &xdg);
+                } else {
+                    println!("Project type '{}' not found.", name);
+                }
+            }
+            
         }
     }
 }

@@ -10,10 +10,12 @@
 
 mod config_io;
 pub mod env_setup;
-mod utils; // re export for tests
+pub mod utils; // re export for tests
 
+use config_io::{ProjectType};
 use mlua::Lua;
 use std::collections::HashMap;
+use std::ops::Deref;
 use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
 use std::{collections::HashSet, fs};
@@ -313,6 +315,23 @@ pub fn untrack_alias_group(name: &str, xdg: &XDG) {
                 .expect("Could not save project config");
         }
     }
+
+    for project_type in get_project_types(xdg).iter() {
+        let mut new_alias_groups = project_type
+            .1
+            .default_alias_groups
+            .clone()
+            .unwrap_or_default();
+        new_alias_groups.retain(|x| x != name);
+        define_project_type(
+            project_type.0,
+            Some(new_alias_groups),
+            project_type.1.builder.as_deref(),
+            project_type.1.opener.as_deref(),
+            true,
+            xdg
+        );
+    }
 }
 
 /// Delete an alias group and move it to system trash.
@@ -328,6 +347,38 @@ pub fn delete_alias_group(name: &str, xdg: &XDG) {
     trash::delete(&alias.path).expect("Could not delete alias group");
     untrack_alias_group(name, xdg);
 }
+
+/// Untrack a library
+pub fn untrack_library(name: &str, xdg: &XDG) {
+    let mut config = Config::load(None, xdg).expect("Could not load config");
+    config
+        .delete_lib(name)
+        .expect("Could not find library");
+    config.save(None, xdg).expect("Could not save config");
+}
+
+/// Untrack a project type
+pub fn untrack_project_type(name: &str, xdg: &XDG) {
+    let mut config = Config::load(None, xdg).expect("Could not load config");
+    config
+        .delete_project_type(name)
+        .expect("Could not find project type");
+    config.save(None, xdg).expect("Could not save config");
+
+    for project in get_projects(xdg).iter() {
+        let project_config_path = Path::new(&project.1 .2).join(ProjectConfig::PROJECT_ROOT_REL_PATH);
+        let mut project_config = ProjectConfig::load(project_config_path.to_str().unwrap())
+            .expect("Could not load project config");
+        if project_config.project_type.as_deref() == Some(name) {
+            println!("Deleting project type from project {}", name);
+            project_config.project_type = None;
+            project_config.save(&project_config_path.to_str().unwrap())
+                .expect("Could not save project config");
+        }
+    }
+}
+
+
 /// Get all projects that are tracked by donna
 /// 
 /// # Arguments
@@ -368,6 +419,59 @@ pub fn get_projects(xdg: &XDG) -> HashMap<String, (String, String, String)> {
     }
     all_projects_data
 }
+
+/// Get all libraries that are tracked by donna
+///
+/// # Arguments
+/// - `xdg` – XDG configuration reference.
+pub fn get_libraries(xdg: &XDG) -> HashMap<String, String> {
+    let config = Config::load(None, xdg).expect("Could not load config");
+    config.get_libs().unwrap()
+}
+
+/// Get all alias groups that are tracked by donna
+/// 
+/// # Arguments
+/// - `xdg` – XDG configuration reference.
+pub fn get_alias_groups(xdg: &XDG) -> HashMap<String, AliasGroup> {
+    let config = Config::load(None, xdg).expect("Could not load config");
+    config.get_alias_groups().unwrap()
+}
+
+/// Get all project types that are tracked by donna
+/// 
+/// # Arguments
+/// - `xdg` – XDG configuration reference.
+pub fn get_project_types(xdg: &XDG) -> HashMap<String, ProjectType> {
+    let config = Config::load(None, xdg).expect("Could not load config");
+    config.get_project_types().unwrap()
+}
+
+pub fn set_builders_path_prefix(path: &str, xdg: &XDG) {
+    if !Path::new(path).is_dir() {
+        panic!("Path doesn't exists");
+    }
+    let mut config = Config::load(None, xdg).expect("Could not load config");
+    config.set_builders_path_prefix(to_full_path(path).to_str().unwrap());
+    config.save(None, xdg).expect("Could not save config");
+}
+
+pub fn set_openers_path_prefix(path: &str, xdg: &XDG) {
+    if !Path::new(path).is_dir() {
+        panic!("Path doesn't exists");
+    }
+    let mut config = Config::load(None, xdg).expect("Could not load config");
+    config.set_openers_path_prefix(to_full_path(path).to_str().unwrap());
+    config.save(None, xdg).expect("Could not save config");
+}
+
+pub fn set_default_lib(name: &str, xdg: &XDG) {
+    let mut config = Config::load(None, xdg).expect("Could not load config");
+    config.set_default_lib(name.to_string());
+    config.save(None, xdg).expect("Could not save config");
+}
+
+
 
 // BLOCKED: need to track aliases for each project in the project config since the system doesn't track it
 // pub fn set_project_alias_groups(name: &str, lib: Option<api_types::LibraryName>, alias_groups: Vec<String>, xdg: &XDG) {
