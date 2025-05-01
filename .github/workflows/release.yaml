@@ -96,7 +96,9 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ steps.get_tag.outputs.tag }}
           files: ./artifacts/**/*
           draft: false
           prerelease: false
           generate_release_notes: true
+          token: ${{ secrets.PAT }}
