@@ -1,9 +1,9 @@
+use log;
 use std;
 use std::env;
 use std::fs;
-use std::process;
 use std::path::Path;
-use log;
+use std::process;
 
 use super::utils::XDG;
 
@@ -17,11 +17,19 @@ enum FS {
 }
 
 pub fn get_config_path(xdg: &XDG) -> String {
-    Path::new(&xdg.get_config_home()).join("project_manager").to_str().unwrap().to_string()
+    Path::new(&xdg.get_config_home())
+        .join("project_manager")
+        .to_str()
+        .unwrap()
+        .to_string()
 }
 
 pub fn get_data_path(xdg: &XDG) -> String {
-    Path::new(&xdg.get_data_home()).join("project_manager/projects").to_str().unwrap().to_string()
+    Path::new(&xdg.get_data_home())
+        .join("project_manager/projects")
+        .to_str()
+        .unwrap()
+        .to_string()
 }
 
 pub fn setup_pm(xdg: &XDG) {
@@ -34,7 +42,10 @@ pub fn setup_pm(xdg: &XDG) {
         (config_file_path.to_str().unwrap(), "Aliases", FS::File),
     ];
 
-    for (path, name, fs_type) in directories.iter().filter(|path| !Path::new(path.0).exists()) {
+    for (path, name, fs_type) in directories
+        .iter()
+        .filter(|path| !Path::new(path.0).exists())
+    {
         let result = match fs_type {
             FS::Folder => fs::create_dir_all(path).map(|_| ()),
             FS::File => fs::File::create(path).map(|_| ()),
@@ -43,7 +54,7 @@ pub fn setup_pm(xdg: &XDG) {
             Ok(_) => log::info!("{} path created at: {}", name, path),
             Err(e) => panic!("Error creating {}: {}", name, e),
         }
-    } 
+    }
 }
 
 fn reset_test_root() {
@@ -83,4 +94,3 @@ pub fn handle_args() {
         _ => {}
     }
 }
-

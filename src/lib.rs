@@ -326,9 +326,18 @@ pub fn open_project(
     Ok(())
 }
 
-pub fn get_project_path(name: &str, lib: Option<&str>, xdg: &XDG) -> Result<PathBuf, errors::GetProjectPathError> {
+pub fn get_project_path(
+    name: &str,
+    lib: Option<&str>,
+    xdg: &XDG,
+) -> Result<PathBuf, errors::GetProjectPathError> {
     let config = Config::load(None, xdg).expect("Could not load config");
-    let path = Path::new(config.get_lib_path(lib).ok_or(errors::LibNotTrackedError(format!("Library not tracked")))?).join(name);
+    let path = Path::new(
+        config
+            .get_lib_path(lib)
+            .ok_or(errors::LibNotTrackedError(format!("Library not tracked")))?,
+    )
+    .join(name);
     if !path.exists() {
         Err(errors::ProjectPathDoesNotExistError(format!(
             "Project path {} does not exist",
@@ -345,7 +354,12 @@ pub fn get_project_path(name: &str, lib: Option<&str>, xdg: &XDG) -> Result<Path
 /// - `new_name` – Optional new name for the alias group.
 /// - `new_path` – Optional new path for the alias group.
 /// - `xdg` – XDG configuration reference.
-pub fn update_alias_group(name: &str, new_name: Option<&str>, new_path: Option<&str>, xdg: &XDG) -> Result<(), errors::UpdateAliasGroupError> {
+pub fn update_alias_group(
+    name: &str,
+    new_name: Option<&str>,
+    new_path: Option<&str>,
+    xdg: &XDG,
+) -> Result<(), errors::UpdateAliasGroupError> {
     let mut config = Config::load(None, xdg)?;
     let new_path = new_path.map(|p| to_full_path(p));
     let alias = config
@@ -359,7 +373,11 @@ pub fn update_alias_group(name: &str, new_name: Option<&str>, new_path: Option<&
     let updated_path = new_path.as_ref().unwrap_or(&old_path);
     if old_path != *updated_path {
         fs::rename(&old_path, updated_path)?;
-        log::info!("Moved alias group from {} to {}", old_path.display(), updated_path.display());
+        log::info!(
+            "Moved alias group from {} to {}",
+            old_path.display(),
+            updated_path.display()
+        );
     }
     config.add_alias_group(
         updated_name.to_string(),
@@ -397,8 +415,7 @@ pub fn untrack_alias_group(name: &str, xdg: &XDG) -> Result<(), errors::UntrackA
             let mut new_alias_groups = project_config.tracked_alias_groups.clone().unwrap();
             new_alias_groups.retain(|x| x != name);
             project_config.tracked_alias_groups = Some(new_alias_groups);
-            project_config
-                .save(&project_config_path.to_str().unwrap())?;
+            project_config.save(&project_config_path.to_str().unwrap())?;
         }
     }
 
@@ -444,10 +461,12 @@ pub fn delete_alias_group(name: &str, xdg: &XDG) -> Result<(), errors::DeleteAli
 /// Untrack a library
 pub fn untrack_library(name: &str, xdg: &XDG) -> Result<(), errors::UntrackLibError> {
     let mut config = Config::load(None, xdg)?;
-    config.delete_lib(name).ok_or(errors::LibNotTrackedError(format!(
-        "Library {} does not exist",
-        name
-    )))?;
+    config
+        .delete_lib(name)
+        .ok_or(errors::LibNotTrackedError(format!(
+            "Library {} does not exist",
+            name
+        )))?;
     config.save(None, xdg)?;
     Ok(())
 }
@@ -470,8 +489,7 @@ pub fn untrack_project_type(name: &str, xdg: &XDG) -> Result<(), errors::Untrack
         if project_config.project_type.as_deref() == Some(name) {
             log::info!("Deleting project type from project {}", name);
             project_config.project_type = None;
-            project_config
-                .save(&project_config_path.to_str().unwrap())?;
+            project_config.save(&project_config_path.to_str().unwrap())?;
         }
     }
     Ok(())
@@ -483,12 +501,18 @@ pub fn untrack_project_type(name: &str, xdg: &XDG) -> Result<(), errors::Untrack
 /// - `xdg` – XDG configuration reference.
 /// # Returns
 /// - A HashMap where the key is the project name and the value is a tuple containing (project type, lib, path)
-pub fn get_projects(xdg: &XDG) -> Result<HashMap<String, (String, String, String)>, errors::GetProjectsError> {
+pub fn get_projects(
+    xdg: &XDG,
+) -> Result<HashMap<String, (String, String, String)>, errors::GetProjectsError> {
     let config = Config::load(None, xdg)?;
     // project_name -> (project_type, lib, path)
     let mut all_projects_data: HashMap<String, (String, String, String)> = HashMap::new();
 
-    for (lib_name, lib_path) in config.get_libs().ok_or(errors::LibNotTrackedError(format!("No libraries found")))?.iter() {
+    for (lib_name, lib_path) in config
+        .get_libs()
+        .ok_or(errors::LibNotTrackedError(format!("No libraries found")))?
+        .iter()
+    {
         let projects = Path::new(lib_path).read_dir()?.filter_map(|f| {
             f.as_ref()
                 .unwrap()
@@ -523,18 +547,22 @@ pub fn get_projects(xdg: &XDG) -> Result<HashMap<String, (String, String, String
 /// - `xdg` – XDG configuration reference.
 pub fn get_libraries(xdg: &XDG) -> Result<HashMap<String, String>, errors::GetLibsError> {
     let config = Config::load(None, xdg)?;
-    Ok(config.get_libs().ok_or(errors::LibNotTrackedError(format!(
-        "No libraries found"
-    )))?)
+    Ok(config
+        .get_libs()
+        .ok_or(errors::LibNotTrackedError(format!("No libraries found")))?)
 }
 
 /// Get all alias groups that are tracked by donna
 ///
 /// # Arguments
 /// - `xdg` – XDG configuration reference.
-pub fn get_alias_groups(xdg: &XDG) -> Result<HashMap<String, AliasGroup>, errors::GetAliasGroupsError> {
+pub fn get_alias_groups(
+    xdg: &XDG,
+) -> Result<HashMap<String, AliasGroup>, errors::GetAliasGroupsError> {
     let config = Config::load(None, xdg)?;
-    Ok(config.get_alias_groups().ok_or(errors::AliasGroupNotTrackedError(format!(
+    Ok(config
+        .get_alias_groups()
+        .ok_or(errors::AliasGroupNotTrackedError(format!(
             "No alias groups found"
         )))?)
 }
@@ -543,12 +571,17 @@ pub fn get_alias_groups(xdg: &XDG) -> Result<HashMap<String, AliasGroup>, errors
 ///
 /// # Arguments
 /// - `xdg` – XDG configuration reference.
-pub fn get_project_types(xdg: &XDG) -> Result<HashMap<String, ProjectType>, errors::GetProjectTypesError> {
+pub fn get_project_types(
+    xdg: &XDG,
+) -> Result<HashMap<String, ProjectType>, errors::GetProjectTypesError> {
     let config = Config::load(None, xdg)?;
     Ok(config.get_project_types().unwrap_or_else(HashMap::new))
 }
 
-pub fn set_builders_path_prefix(path: &str, xdg: &XDG) -> Result<(), errors::SetBuildersPathPrefixError> {
+pub fn set_builders_path_prefix(
+    path: &str,
+    xdg: &XDG,
+) -> Result<(), errors::SetBuildersPathPrefixError> {
     if !Path::new(path).is_dir() {
         Err(errors::BuilderPathNotFoundError(format!(
             "Path {} does not exist",
@@ -561,7 +594,10 @@ pub fn set_builders_path_prefix(path: &str, xdg: &XDG) -> Result<(), errors::Set
     Ok(())
 }
 
-pub fn set_openers_path_prefix(path: &str, xdg: &XDG) -> Result<(), errors::SetOpenersPathPrefixError> {
+pub fn set_openers_path_prefix(
+    path: &str,
+    xdg: &XDG,
+) -> Result<(), errors::SetOpenersPathPrefixError> {
     if !Path::new(path).is_dir() {
         Err(errors::OpenerPathNotFoundError(format!(
             "Path {} does not exist",

@@ -130,7 +130,6 @@ pub enum CreateAliasGroupError {
     IoError(#[from] std::io::Error),
 }
 
-
 #[derive(thiserror::Error, Debug)]
 pub enum CreateLibError {
     // config error
@@ -149,7 +148,6 @@ pub enum CreateLibError {
     #[error("IO Error: {0}")]
     IoError(#[from] std::io::Error),
 }
-
 
 #[derive(thiserror::Error, Debug)]
 pub enum CreateProjectError {
@@ -184,7 +182,6 @@ pub enum CreateProjectError {
     // alias group not tracked
     #[error("Alias group not tracked: {0}")]
     AliasGroupNotTracked(#[from] AliasGroupNotTrackedError),
-    
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -209,7 +206,6 @@ pub enum OpenProjectError {
     #[error("Opener path not found: {0}")]
     OpenerPathNotFound(#[from] OpenerPathNotFoundError),
 }
-
 
 #[derive(thiserror::Error, Debug)]
 pub enum GetProjectPathError {
@@ -239,7 +235,6 @@ pub enum UpdateAliasGroupError {
     // move file error
     #[error("Move file error: {0}")]
     MoveFileError(#[from] std::io::Error),
-    
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -274,7 +269,7 @@ pub enum DeleteAliasGroupError {
     // config error`
     #[error("Config error: {0}")]
     ConfigError(#[from] ConfigError),
-    
+
     // alias group not tracked
     #[error("Alias group not tracked: {0}")]
     AliasGroupNotTracked(#[from] AliasGroupNotTrackedError),
@@ -304,7 +299,7 @@ pub enum UntrackLibError {
 
     // project type definition error
     #[error("Project type definition error: {0}")]
-    ProjectTypeDefinitionError(#[from] ProjectTypeDefinitionError), 
+    ProjectTypeDefinitionError(#[from] ProjectTypeDefinitionError),
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -332,7 +327,7 @@ pub enum UntrackProjectTypeError {
 
 #[derive(thiserror::Error, Debug)]
 pub enum GetProjectsError {
-    // config error 
+    // config error
     #[error("Config error: {0}")]
     ConfigError(#[from] ConfigError),
 
@@ -348,7 +343,6 @@ pub enum GetProjectsError {
     #[error("Project config error: {0}")]
     ProjectConfigError(#[from] ProjectConfigError),
 }
-
 
 #[derive(thiserror::Error, Debug)]
 pub enum GetLibsError {
@@ -400,7 +394,6 @@ pub enum SetOpenersPathPrefixError {
     #[error("Path not found: {0}")]
     PathNotFound(#[from] OpenerPathNotFoundError),
 }
-
 
 #[derive(thiserror::Error, Debug)]
 pub enum SetDefaultLibError {

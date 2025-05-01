@@ -1,6 +1,6 @@
 use std::env;
-use std::path::{Path, PathBuf};
 use std::fs;
+use std::path::{Path, PathBuf};
 
 use crate::errors;
 
@@ -16,7 +16,11 @@ pub struct XDG {
     pub data_home_name: String,
 }
 impl XDG {
-    pub fn new(home_var_name: Option<&str>, config_home_name: Option<&str>, data_home_name: Option<&str>) -> Self {
+    pub fn new(
+        home_var_name: Option<&str>,
+        config_home_name: Option<&str>,
+        data_home_name: Option<&str>,
+    ) -> Self {
         XDG {
             home_var_name: home_var_name.unwrap_or("HOME").to_string(),
             config_home_name: config_home_name.unwrap_or("XDG_CONFIG_HOME").to_string(),
@@ -105,8 +109,8 @@ pub fn delete(path: &str) -> Result<(), errors::DeleteError> {
     let path = Path::new(path);
     if use_trash == "false" {
         fs::remove_dir_all(path)?;
-    } else  {
+    } else {
         trash::delete(path)?;
-    } 
+    }
     Ok(())
 }

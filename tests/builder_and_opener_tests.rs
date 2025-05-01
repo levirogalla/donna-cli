@@ -13,7 +13,11 @@ fn test_opener_with_only_defaults() {
     let unique_name = "test_opener_with_only_defaults";
     let unique_config_home_name = unique_name.to_string() + "_config";
     let unique_data_home_name = unique_name.to_string() + "_data";
-    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
+    let xdg = XDG::new(
+        Some(unique_name),
+        Some(&unique_config_home_name),
+        Some(&unique_data_home_name),
+    );
     let mut _cleanup = setup_home(unique_name, &xdg);
     // _cleanup.drop = false;
 
@@ -83,7 +87,11 @@ fn test_opener() {
     let unique_name = "test_opener";
     let unique_config_home_name = unique_name.to_string() + "_config";
     let unique_data_home_name = unique_name.to_string() + "_data";
-    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
+    let xdg = XDG::new(
+        Some(unique_name),
+        Some(&unique_config_home_name),
+        Some(&unique_data_home_name),
+    );
     let _cleanup = setup_home(unique_name, &xdg);
 
     let home_dir_path = gen_test_home_path(unique_name);
@@ -168,7 +176,11 @@ fn test_builder_with_only_defaults() {
     let unique_name = "test_builder_with_only_defaults";
     let unique_config_home_name = unique_name.to_string() + "_config";
     let unique_data_home_name = unique_name.to_string() + "_data";
-    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
+    let xdg = XDG::new(
+        Some(unique_name),
+        Some(&unique_config_home_name),
+        Some(&unique_data_home_name),
+    );
     let mut _cleanup = setup_home(unique_name, &xdg);
     // _cleanup.drop = false;
 
@@ -238,7 +250,11 @@ fn test_builder() {
     let unique_name = "test_builder";
     let unique_config_home_name = unique_name.to_string() + "_config";
     let unique_data_home_name = unique_name.to_string() + "_data";
-    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
+    let xdg = XDG::new(
+        Some(unique_name),
+        Some(&unique_config_home_name),
+        Some(&unique_data_home_name),
+    );
     let mut _cleanup = setup_home(unique_name, &xdg);
 
     let home_dir_path = gen_test_home_path(unique_name);

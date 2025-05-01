@@ -1,11 +1,14 @@
 use std::{f32::consts::E, io::Write};
 
 use clap::{CommandFactory, Parser, Subcommand};
-use clap_complete::{Shell, generate, ValueHint};
+use clap_complete::{generate, Shell, ValueHint};
 use donna::{
     create_alias_group, create_lib, create_project, define_project_type, env_setup,
     errors::{
-        ConfigError, CreateAliasGroupError, CreateLibError, CreateProjectError, GetAliasGroupsError, GetLibsError, GetProjectPathError, GetProjectTypesError, GetProjectsError, OpenProjectError, ProjectTypeDefinitionError, UntrackAliasGroupError, UntrackLibError, UntrackProjectTypeError
+        ConfigError, CreateAliasGroupError, CreateLibError, CreateProjectError,
+        GetAliasGroupsError, GetLibsError, GetProjectPathError, GetProjectTypesError,
+        GetProjectsError, OpenProjectError, ProjectTypeDefinitionError, UntrackAliasGroupError,
+        UntrackLibError, UntrackProjectTypeError,
     },
     get_alias_groups, get_libraries, get_project_path, get_project_types, get_projects,
     open_project, set_builders_path_prefix, set_default_lib, set_openers_path_prefix,
@@ -84,7 +87,6 @@ enum Commands {
     //     /// Name of the project
     //     name: String,
     // },
-    
     Forget {
         #[command(subcommand)]
         entity: ForgetEntity,
@@ -93,7 +95,7 @@ enum Commands {
     Completion {
         #[arg(value_enum)]
         shell: Shell,
-    }
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -564,11 +566,14 @@ fn main() {
                 }
                 let project_name = path.file_name().unwrap().to_str().unwrap();
 
-                if *new && ProjectConfig::load(
-                    path.join(ProjectConfig::PROJECT_ROOT_REL_PATH)
-                        .to_str()
-                        .unwrap(),
-                ).is_ok() {
+                if *new
+                    && ProjectConfig::load(
+                        path.join(ProjectConfig::PROJECT_ROOT_REL_PATH)
+                            .to_str()
+                            .unwrap(),
+                    )
+                    .is_ok()
+                {
                     println!("Project '{}' already exists, skipping.", project_name);
                     continue;
                 }

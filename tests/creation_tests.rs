@@ -1,6 +1,5 @@
-
 use donna::{
-    create_alias_group, create_lib, create_project, define_project_type, Config, ProjectConfig, XDG
+    create_alias_group, create_lib, create_project, define_project_type, Config, ProjectConfig, XDG,
 };
 mod utils;
 use utils::{
@@ -8,15 +7,19 @@ use utils::{
     gen_test_home_path, setup_home,
 };
 
-use std::path::{Path, PathBuf};
 use rand::prelude::*;
+use std::path::{Path, PathBuf};
 
 #[test]
 fn test_fs_setup() {
     let unique_name = "test_fs_setup";
-        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_config_home_name = unique_name.to_string() + "_config";
     let unique_data_home_name = unique_name.to_string() + "_data";
-    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
+    let xdg = XDG::new(
+        Some(unique_name),
+        Some(&unique_config_home_name),
+        Some(&unique_data_home_name),
+    );
 
     let _cleanup = setup_home(unique_name, &xdg);
 
@@ -35,9 +38,13 @@ fn test_fs_setup() {
 #[test]
 fn test_create_project_no_alias_no_type() {
     let unique_name = "test_create_project_no_alias";
-        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_config_home_name = unique_name.to_string() + "_config";
     let unique_data_home_name = unique_name.to_string() + "_data";
-    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
+    let xdg = XDG::new(
+        Some(unique_name),
+        Some(&unique_config_home_name),
+        Some(&unique_data_home_name),
+    );
     let _cleanup = setup_home(unique_name, &xdg);
 
     create_project("test-proj", None, None, None, false, &xdg);
@@ -62,9 +69,13 @@ fn test_create_project_no_alias_no_type() {
 #[test]
 fn test_create_alias_group() {
     let unique_name = "test_create_alias_group";
-        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_config_home_name = unique_name.to_string() + "_config";
     let unique_data_home_name = unique_name.to_string() + "_data";
-    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
+    let xdg = XDG::new(
+        Some(unique_name),
+        Some(&unique_config_home_name),
+        Some(&unique_data_home_name),
+    );
     let _cleanup = setup_home(unique_name, &xdg);
 
     let alias_group_path = gen_test_alias_groups_path(unique_name).join("t-alias");
@@ -81,9 +92,13 @@ fn test_create_alias_group() {
 #[test]
 fn test_create_project_with_alias_and_lib() {
     let unique_name = "test_create_project_with_alias";
-        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_config_home_name = unique_name.to_string() + "_config";
     let unique_data_home_name = unique_name.to_string() + "_data";
-    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
+    let xdg = XDG::new(
+        Some(unique_name),
+        Some(&unique_config_home_name),
+        Some(&unique_data_home_name),
+    );
     let _cleanup = setup_home(unique_name, &xdg);
 
     create_lib(
@@ -153,9 +168,13 @@ fn test_create_project_with_alias_and_lib() {
 #[test]
 fn test_create_project_with_type() {
     let unique_name = "test_create_project_with_type";
-        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_config_home_name = unique_name.to_string() + "_config";
     let unique_data_home_name = unique_name.to_string() + "_data";
-    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
+    let xdg = XDG::new(
+        Some(unique_name),
+        Some(&unique_config_home_name),
+        Some(&unique_data_home_name),
+    );
     let _cleanup = setup_home(unique_name, &xdg);
 
     define_project_type("test-project-type", None, None, None, false, &xdg);
@@ -192,9 +211,13 @@ fn test_create_project_with_type() {
 #[test]
 fn test_create_projects_with_libs() {
     let unique_name = "test_create_project_with_lib";
-        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_config_home_name = unique_name.to_string() + "_config";
     let unique_data_home_name = unique_name.to_string() + "_data";
-    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
+    let xdg = XDG::new(
+        Some(unique_name),
+        Some(&unique_config_home_name),
+        Some(&unique_data_home_name),
+    );
     let _cleanup = setup_home(unique_name, &xdg);
 
     create_lib(
@@ -289,9 +312,13 @@ fn test_create_projects_with_libs() {
 #[test]
 fn test_create_many_projects_with_type_and_alias_and_lib() {
     let unique_name = "test_create_many_projects_with_type_and_alias_and_lib";
-        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_config_home_name = unique_name.to_string() + "_config";
     let unique_data_home_name = unique_name.to_string() + "_data";
-    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
+    let xdg = XDG::new(
+        Some(unique_name),
+        Some(&unique_config_home_name),
+        Some(&unique_data_home_name),
+    );
     let _cleanup = setup_home(unique_name, &xdg);
 
     let home_path = gen_test_home_path(unique_name);
@@ -345,7 +372,14 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
         false,
         &xdg,
     );
-    define_project_type("type2", Some(vec!["alias3".to_string()]), None, None, false, &xdg);
+    define_project_type(
+        "type2",
+        Some(vec!["alias3".to_string()]),
+        None,
+        None,
+        false,
+        &xdg,
+    );
 
     struct Project {
         name: String,
@@ -494,9 +528,13 @@ fn test_incorrect_usage() {
 #[test]
 fn test_relative_paths_are_handled_properly() {
     let unique_name = "test_relative_paths_are_handled_properly";
-        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_config_home_name = unique_name.to_string() + "_config";
     let unique_data_home_name = unique_name.to_string() + "_data";
-    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
+    let xdg = XDG::new(
+        Some(unique_name),
+        Some(&unique_config_home_name),
+        Some(&unique_data_home_name),
+    );
     let mut _cleanup = setup_home(unique_name, &xdg);
 
     let cwd = std::env::current_dir().unwrap();
@@ -504,13 +542,30 @@ fn test_relative_paths_are_handled_properly() {
     gen_test_home_path(unique_name);
     let test_home = Path::new("./tests/test_home_dirs").join(unique_name);
     // make sure we are running tests from root dir
-    assert!(cwd.read_dir().unwrap().filter(|f| ["tests", "Cargo.toml", "src"].contains(&f.as_ref().unwrap().file_name().to_str().unwrap())).count() == 3);
+    assert!(
+        cwd.read_dir()
+            .unwrap()
+            .filter(|f| ["tests", "Cargo.toml", "src"]
+                .contains(&f.as_ref().unwrap().file_name().to_str().unwrap()))
+            .count()
+            == 3
+    );
 
-    create_lib("lib", test_home.join("lib").to_str().unwrap(), true, false, &xdg);
-    create_alias_group("group", test_home.join("group").to_str().unwrap(), false, &xdg);
+    create_lib(
+        "lib",
+        test_home.join("lib").to_str().unwrap(),
+        true,
+        false,
+        &xdg,
+    );
+    create_alias_group(
+        "group",
+        test_home.join("group").to_str().unwrap(),
+        false,
+        &xdg,
+    );
 
     let config = Config::load(None, &xdg).unwrap();
     assert!(PathBuf::from(config.get_alias_group("group").unwrap().path.as_str()).is_absolute());
     assert!(PathBuf::from(config.get_lib_path(Some("lib")).unwrap()).is_absolute());
-
 }
