@@ -22,6 +22,8 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           
       - name: Create Tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
