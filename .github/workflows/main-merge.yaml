@@ -26,7 +26,11 @@ jobs:
           
       - name: Create Tag
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --local user.name "${{ github.actor }}"
+
+          # Create the tag
           git tag -a v${{ steps.get_version.outputs.version }} -m "Release v${{ steps.get_version.outputs.version }}"
-          git push origin v${{ steps.get_version.outputs.version }}
+
+          # Push using the PAT explicitly in the URL
+          git push https://${{ secrets.PAT }}@github.com/${{ github.repository }}.git v${{ steps.get_version.outputs.version }}
