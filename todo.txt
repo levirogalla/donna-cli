@@ -38,3 +38,8 @@ make projects
 make aliases
 
 add examples to docs
+
+
+TESTS:
+
+creating alias group will overight an exisitng one

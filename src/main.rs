@@ -1,11 +1,8 @@
-use std::io::Write;
+use std::{f32::consts::E, io::Write};
 
 use clap::{Parser, Subcommand};
 use donna::{
-    create_alias_group, create_lib, create_project, define_project_type, env_setup,
-    get_alias_groups, get_libraries, get_project_path, get_project_types, get_projects,
-    open_project, set_builders_path_prefix, set_default_lib, set_openers_path_prefix,
-    untrack_alias_group, untrack_library, untrack_project_type, utils,
+    create_alias_group, create_lib, create_project, define_project_type, env_setup, errors::{ConfigError, CreateAliasGroupError, CreateLibError, CreateProjectError, GetAliasGroupsError, GetLibsError, GetProjectPathError, GetProjectTypesError, GetProjectsError, ProjectTypeDefinitionError, UntrackAliasGroupError, UntrackLibError, UntrackProjectTypeError}, get_alias_groups, get_libraries, get_project_path, get_project_types, get_projects, open_project, set_builders_path_prefix, set_default_lib, set_openers_path_prefix, untrack_alias_group, untrack_library, untrack_project_type, utils
 };
 use env_logger;
 
@@ -250,6 +247,21 @@ enum OpenEntity {
     },
 }
 
+fn handle_config_error(error: ConfigError) {
+    match error {
+        ConfigError::BadPath(_) => {
+            println!("Config file not found. Does it exist under ~/.config/donna/config.toml?");
+        }
+        ConfigError::TomlLoad(_) => {
+            println!("Error parsing config file.");
+        }
+        ConfigError::TomlSave(_) => {
+            println!("Error saving config file.");
+        }
+    }
+    
+}
+
 fn main() {
     let args = Cli::parse();
     if args.verbose {
@@ -269,21 +281,39 @@ fn main() {
                 alias_group,
                 library,
             } => {
-                create_project(
+                match create_project(
                     name,
                     project_type.as_deref(),
                     alias_group.as_deref(),
                     library.as_deref(),
                     *handoff,
                     &xdg,
-                );
+                ) {
+                    Ok(_) => {
+                        println!("Project '{}' created successfully.", name);
+                    }
+                    Err(CreateProjectError::ConfigError(config_error)) => {
+                        handle_config_error(config_error);
+                    }
+                    Err(err) => {
+                        println!("Error creating project: {}", err);
+                    }
+                };
             }
             CreateEntity::AliasGroup {
                 name,
                 handoff,
                 path,
             } => {
-                create_alias_group(name, path.as_str(), *handoff, &xdg);
+                match create_alias_group(name, path.as_str(), *handoff, &xdg) {
+                    Ok(_) => {}
+                    Err(CreateAliasGroupError::ConfigError(config_error)) => {
+                        handle_config_error(config_error);
+                    }
+                    Err(err) => {
+                        println!("Error creating alias group: {}", err);
+                    }
+                };
             }
             CreateEntity::Lib {
                 name,
@@ -291,7 +321,17 @@ fn main() {
                 default,
                 handoff,
             } => {
-                create_lib(name, path, *default, *handoff, &xdg);
+                match create_lib(name, path, *default, *handoff, &xdg) {
+                    Ok(_) => {
+                        println!("Library '{}' created successfully.", name);
+                    }
+                    Err(CreateLibError::ConfigError(config_error)) => {
+                        handle_config_error(config_error);
+                    }
+                    Err(err) => {
+                        println!("Error creating library: {}", err);
+                    }
+                };
             }
             CreateEntity::ProjectType {
                 name,
@@ -300,14 +340,24 @@ fn main() {
                 builder,
                 redefine,
             } => {
-                define_project_type(
+                match define_project_type(
                     name,
                     default_groups.as_ref().map(|v| v.clone()),
                     builder.as_deref(),
                     opener.as_deref(),
                     *redefine,
                     &xdg,
-                );
+                ) {
+                    Ok(_) => {
+                        println!("Project type '{}' created successfully.", name);
+                    }
+                    Err(ProjectTypeDefinitionError::ConfigError(config_error)) => {
+                        handle_config_error(config_error);
+                    }
+                    Err(err) => {
+                        println!("Error creating project type: {}", err);
+                    }
+                };
             }
         },
         Commands::List { entity: list } => match list {
@@ -317,12 +367,24 @@ fn main() {
                 types,
                 all,
             } => {
+                let projects_map = match get_projects(&xdg) {
+                    Ok(projects) => projects,
+                    Err(GetProjectsError::ConfigError(config_error)) => {
+                        handle_config_error(config_error);
+                        return;
+                    }
+                    Err(err) => {
+                        println!("Error getting projects: {}", err);
+                        return;
+                    }
+
+                };
                 let projects: Vec<(
                     Option<String>,
                     Option<String>,
                     Option<String>,
                     Option<String>,
-                )> = get_projects(&xdg)
+                )> = projects_map
                     .iter()
                     .map(|d| {
                         let project_name = Some(d.0.clone());
@@ -377,7 +439,19 @@ fn main() {
             }
 
             ListEntity::Libraries {} => {
-                let rows: Vec<Vec<String>> = get_libraries(&xdg)
+                let libs = match get_libraries(&xdg) {
+                    Ok(libs) => libs,
+                    Err(GetLibsError::ConfigError(err)) => {
+                        handle_config_error(err);
+                        return;
+                    },
+                    Err(err) => {
+                        println!("Error getting libraries: {}", err);
+                        return;
+                    }
+                    
+                };
+                let rows: Vec<Vec<String>> = libs
                     .iter()
                     .map(|(name, path)| vec![name.clone(), path.clone()])
                     .collect();
@@ -386,7 +460,18 @@ fn main() {
             }
 
             ListEntity::AliasGroups {} => {
-                let rows: Vec<Vec<String>> = get_alias_groups(&xdg)
+                let alias_groups = match get_alias_groups(&xdg) {
+                    Ok(groups) => groups,
+                    Err(GetAliasGroupsError::ConfigError(err)) => {
+                        handle_config_error(err);
+                        return;
+                    },
+                    Err(err) => {
+                        println!("Error getting alias groups: {}", err);
+                        return;
+                    }
+                };
+                let rows: Vec<Vec<String>> = alias_groups
                     .iter()
                     .map(|(name, group)| vec![name.clone(), group.path.clone()])
                     .collect();
@@ -395,7 +480,18 @@ fn main() {
             }
 
             ListEntity::ProjectTypes {} => {
-                let rows: Vec<Vec<String>> = get_project_types(&xdg)
+                let project_types = match get_project_types(&xdg) {
+                    Ok(types) => types,
+                    Err(GetProjectTypesError::ConfigError(err)) => {
+                        handle_config_error(err);
+                        return;
+                    },
+                    Err(err) => {
+                        println!("Error getting project types: {}", err);
+                        return;
+                    }
+                };
+                let rows: Vec<Vec<String>> = project_types
                     .iter()
                     .map(|(name, pt)| {
                         vec![
@@ -426,7 +522,19 @@ fn main() {
             project_type,
             yes,
         } => {
-            create_lib(name, path, *default, true, &xdg);
+            match create_lib(name, path, *default, true, &xdg) {
+                Ok(_) => {
+                    println!("Library '{}' created successfully.", name);
+                }
+                Err(CreateLibError::ConfigError(config_error)) => {
+                    handle_config_error(config_error);
+                    return;
+                }
+                Err(err) => {
+                    println!("Error creating library: {}", err);
+                    return;
+                }
+            };
             let dir_items = std::fs::read_dir(path).unwrap();
             for item in dir_items.flatten() {
                 let path = item.path();
@@ -461,26 +569,59 @@ fn main() {
                         project_type = Some(input.to_string());
                     }
                 }
-                create_project(
+                match create_project(
                     project_name,
                     project_type.as_deref(),
                     None,
                     Some(name),
                     true,
                     &xdg,
-                );
+                ) {
+                    Ok(_) => {
+                        println!("Project '{}' created successfully.", project_name);
+                    }
+                    Err(CreateProjectError::ConfigError(config_error)) => {
+                        handle_config_error(config_error);
+                        return;
+                    }
+                    Err(err) => {
+                        println!("Error creating project: {}", err);
+                        return;
+                    }
+                };
             }
         }
 
         Commands::Set { option } => match option {
             SetOption::DefaultLib { name } => {
-                set_default_lib(name, &xdg);
+                match set_default_lib(name, &xdg) {
+                    Ok(_) => {
+                        println!("Default library set to '{}'", name);
+                    }
+                    Err(err) => {
+                        println!("Error setting default library: {}", err);
+                    }
+                };
             }
             SetOption::BuildersPath { path } => {
-                set_builders_path_prefix(path, &xdg);
+                match set_builders_path_prefix(path, &xdg) {
+                    Ok(_) => {
+                        println!("Builders path set to '{}'", path);
+                    }
+                    Err(err) => {
+                        println!("Error setting builders path: {}", err);
+                    }
+                };
             }
             SetOption::OpenersPath { path } => {
-                set_openers_path_prefix(path, &xdg);
+                match set_openers_path_prefix(path, &xdg) {
+                    Ok(_) => {
+                        println!("Openers path set to '{}'", path);
+                    }
+                    Err(err) => {
+                        println!("Error setting openers path: {}", err);
+                    }
+                };
             }
         },
 
@@ -491,7 +632,17 @@ fn main() {
                 terminal,
             } => match terminal {
                 true => {
-                    let path = get_project_path(name, lib.as_deref(), &xdg);
+                    let path= match get_project_path(name, lib.as_deref(), &xdg) {
+                        Ok(path) => path,
+                        Err(GetProjectPathError::ConfigError(config_error)) => {
+                            handle_config_error(config_error);
+                            return;
+                        }
+                        Err(err) => {
+                            println!("Error getting project path: {}", err);
+                            return;
+                        }
+                    };
                     println!("{}", path.to_str().unwrap());
                 }
                 false => {
@@ -506,20 +657,73 @@ fn main() {
 
         Commands::Forget { entity } => match entity {
             ForgetEntity::AliasGroup { name } => {
-                untrack_alias_group(name, &xdg);
+                match untrack_alias_group(name, &xdg) {
+                    Ok(_) => {
+                        println!("Alias group '{}' untracked successfully.", name);
+                    }
+                    Err(UntrackAliasGroupError::ConfigError(config_error)) => {
+                        handle_config_error(config_error);
+                        return;
+                    }
+                    Err(err) => {
+                        println!("Error untracking alias group: {}", err);
+                    }
+                };
             }
             ForgetEntity::Library { name } => {
-                let libraries = get_libraries(&xdg);
+                let libraries = match get_libraries(&xdg) {
+                    Ok(libraries) => libraries,
+                    Err(GetLibsError::ConfigError(err)) => {
+                        handle_config_error(err);
+                        return;
+                    },
+                    Err(err) => {
+                        println!("Error getting libraries: {}", err);
+                        return;
+                    }
+                };
                 if libraries.contains_key(name) {
-                    untrack_library(name, &xdg);
+                    match untrack_library(name, &xdg) {
+                        Ok(_) => {
+                            println!("Library '{}' untracked successfully.", name);
+                        }
+                        Err(UntrackLibError::ConfigError(config_error)) => {
+                            handle_config_error(config_error);
+                            return;
+                        }
+                        Err(err) => {
+                            println!("Error untracking library: {}", err);
+                        }
+                    };
                 } else {
                     println!("Library '{}' not found.", name);
                 }
             }
             ForgetEntity::ProjectType { name } => {
-                let project_types = get_project_types(&xdg);
+                let project_types = match get_project_types(&xdg) {
+                    Ok(project_types) => project_types,
+                    Err(GetProjectTypesError::ConfigError(err)) => {
+                        handle_config_error(err);
+                        return;
+                    },
+                    Err(err) => {
+                        println!("Error getting project types: {}", err);
+                        return;
+                    }
+                };
                 if project_types.contains_key(name) {
-                    untrack_project_type(name, &xdg);
+                    match untrack_project_type(name, &xdg) {
+                        Ok(_) => {
+                            println!("Project type '{}' untracked successfully.", name);
+                        }
+                        Err(UntrackProjectTypeError::ConfigError(config_error)) => {
+                            handle_config_error(config_error);
+                            return;
+                        }
+                        Err(err) => {
+                            println!("Error untracking project type: {}", err);
+                        }
+                    };
                 } else {
                     println!("Project type '{}' not found.", name);
                 }

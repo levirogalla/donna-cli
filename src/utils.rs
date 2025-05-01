@@ -21,7 +21,7 @@ impl XDG {
         match env::var("XDG_CONFIG_HOME") {
             Ok(val) => val,
             Err(_) => {
-                let home = env::var(&self.home_var_name).expect("Could not find HOME variable");
+                let home = env::var(&self.home_var_name).expect("Could not find HOME env variable");
                 Path::new(&home)
                     .join(".config")
                     .to_str()

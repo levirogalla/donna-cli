@@ -1,4 +1,5 @@
 use super::utils::{types, XDG};
+use crate::errors::{ConfigError, ProjectConfigError};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::{collections::HashMap, error::Error, fs};
@@ -33,11 +34,6 @@ pub struct ProjectConfig {
     pub tracked_alias_groups: Option<Vec<types::AliasGroupName>>,
 }
 
-pub struct SimpleHistory {
-    snapshot_dir: PathBuf,
-    manifest_path: PathBuf,
-}
-
 impl Config {
     const RC_REL_PATH: &'static str = "project_manager/config.toml";
     const REL_DATA_DIR: &'static str = "project_manager";
@@ -49,7 +45,7 @@ impl Config {
                 .unwrap_or_else(|| Self::get_path(xdg)),
         )?;
 
-        let mut config: Config = toml::from_str(&contents).unwrap();
+        let mut config: Config = toml::from_str(&contents)?;
 
         config.library_paths.get_or_insert_with(HashMap::new);
         config.alias_groups.get_or_insert_with(HashMap::new);
@@ -128,15 +124,13 @@ impl Config {
         self.default_lib = Some(name.to_string());
     }
 
-    pub fn get_lib_path(&self, name: Option<&str>) -> Result<&str, ConfigError> {
+    /// Get the default library path, if name is none, it will try to return the default library path
+    pub fn get_lib_path(&self, name: Option<&str>) -> Option<&str> {
         self.library_paths
             .as_ref()
-            .expect("No library paths found")
+            .unwrap()
             .get(name.unwrap_or(self.default_lib.as_ref().map_or("default", |s| s.as_str())))
             .map(|s| s.as_str())
-            .ok_or(ConfigError {
-                message: "Could not find library path".to_string(),
-            })
     }
 
     pub fn add_project_type(
@@ -178,16 +172,12 @@ impl Config {
     pub fn get_project_type(&self, name: types::ProjectTypeName) -> Option<&ProjectType> {
         self.project_types
             .as_ref()
-            .map(|project_types| project_types.get(&name)).flatten()
+            .map(|project_types| project_types.get(&name))
+            .flatten()
     }
 
-    pub fn get_libs(&self) -> Result<HashMap<types::LibraryName, String>, ConfigError> {
-        self.library_paths
-            .as_ref()
-            .ok_or(ConfigError {
-                message: "No library paths found".to_string(),
-            })
-            .map(|libs| libs.clone())
+    pub fn get_libs(&self) -> Option<HashMap<types::LibraryName, String>> {
+        self.library_paths.as_ref().map(|libs| libs.clone())
     }
 
     pub fn set_builders_path_prefix(&mut self, path: &str) {
@@ -198,20 +188,20 @@ impl Config {
         self.openers_path_prefix = Some(path.to_string());
     }
 
-    pub fn get_alias_groups(&self) -> Result<HashMap<types::AliasGroupName, AliasGroup>, ConfigError> {
+    pub fn get_alias_groups(&self) -> Option<HashMap<types::AliasGroupName, AliasGroup>> {
         self.alias_groups
             .as_ref()
-            .ok_or(ConfigError {
-                message: "No alias groups found".to_string(),
-            })
             .map(|alias_groups| alias_groups.clone())
     }
 
-    pub fn get_project_types(&self) -> HashMap<types::ProjectTypeName, ProjectType> {
+    pub fn get_project_types(&self) -> Option<HashMap<types::ProjectTypeName, ProjectType>> {
         self.project_types
             .as_ref()
             .map(|project_types| project_types.clone())
-            .unwrap_or_else(HashMap::new)
+    }
+
+    pub fn get_default_lib(&self) -> Option<types::LibraryName> {
+        self.default_lib.clone()
     }
 }
 
@@ -222,7 +212,7 @@ impl AliasGroup {
         }
     }
 
-    pub fn get_project_configs(&self) -> Result<Vec<ProjectConfig>, ConfigError> {
+    pub fn get_project_configs(&self) -> Result<Vec<ProjectConfig>, std::io::Error> {
         let project_alias_configs: Vec<ProjectConfig> = fs::read_dir(&self.path)?
             .filter_map(|entry| {
                 let entry = entry.ok()?;
@@ -275,15 +265,16 @@ impl ProjectConfig {
             builder,
         }
     }
-    pub fn load(path: &str) -> Result<ProjectConfig, ConfigError> {
+
+    pub fn load(path: &str) -> Result<ProjectConfig, ProjectConfigError> {
         let contents = fs::read_to_string(path)?;
 
-        let config: ProjectConfig = toml::from_str(&contents).unwrap();
+        let config: ProjectConfig = toml::from_str(&contents)?;
 
         Ok(config)
     }
 
-    pub fn save(&self, path: &str) -> Result<(), ConfigError> {
+    pub fn save(&self, path: &str) -> Result<(), ProjectConfigError> {
         let toml_str = toml::to_string(self)?;
 
         fs::write(path, toml_str)?;
@@ -299,45 +290,6 @@ impl Default for ProjectConfig {
             opener: None,
             tracked_alias_groups: Some(vec![]),
             builder: None,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct ConfigError {
-    message: String,
-}
-
-impl std::fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-/// Implement `Error` trait so it can be used as a proper error type
-impl Error for ConfigError {}
-
-/// Implement `From` to allow automatic conversion from `io::Error`
-impl From<std::io::Error> for ConfigError {
-    fn from(err: std::io::Error) -> Self {
-        ConfigError {
-            message: format!("IO Error: {}", err),
-        }
-    }
-}
-
-/// Implement `From` to allow automatic conversion from `toml::de::Error`
-impl From<toml::de::Error> for ConfigError {
-    fn from(err: toml::de::Error) -> Self {
-        ConfigError {
-            message: format!("TOML Error: {}", err),
-        }
-    }
-}
-
-impl From<toml::ser::Error> for ConfigError {
-    fn from(err: toml::ser::Error) -> Self {
-        ConfigError {
-            message: format!("TOML Error: {}", err),
         }
     }
 }

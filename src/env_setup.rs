@@ -41,7 +41,7 @@ pub fn setup_pm(xdg: &XDG) {
         };
         match result {
             Ok(_) => log::info!("{} path created at: {}", name, path),
-            Err(e) => log::error!("Error creating {}: {}", name, e),
+            Err(e) => panic!("Error creating {}: {}", name, e),
         }
     } 
 }
