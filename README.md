@@ -1,6 +1,6 @@
 # Donna - CLI Project Manager
 
-[![CI Status](https://github.com/levirogalla/donna-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/levirogalla/donna-cli/actions/workflows/ci.yml)
+[![CI Status](https://github.com/levirogalla/donna-cli/actions/workflows/ci.yaml/badge.svg)](https://github.com/levirogalla/donna-cli/actions/workflows/ci.yaml)
 
 Donna is a powerful command-line project manager designed to help you organize, create, and manage projects across your system. It provides a structured way to manage project libraries, define project types, and simplify access to your work.
 
