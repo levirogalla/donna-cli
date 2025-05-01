@@ -153,4 +153,4 @@ The **Project Manager (PM)** is a command-line tool designed to help users manag
 
 The **Project Manager (PM)** is a powerful and flexible tool for managing projects on a computer. By allowing users to define custom templates, aliases, and workflows, the PM adapts to a wide range of use cases. Its health check and repair features ensure consistency, while its extensibility makes it a valuable tool for both individual users and teams.
 
-[![CI Status](https://github.com/levirogalla/donna/actions/workflows/ci.yml/badge.svg)](https://github.com/levirogalla/donna/actions/workflows/ci.yml)
+[![CI Status](https://github.com/levirogalla/donna-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/levirogalla/donna-cli/actions/workflows/ci.yml)
