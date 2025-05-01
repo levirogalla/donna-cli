@@ -23,7 +23,7 @@ use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
 use std::{collections::HashSet, fs};
 use trash;
-use utils::to_full_path;
+use utils::{delete, to_full_path};
 
 pub use config_io::{AliasGroup, Config, ProjectConfig};
 pub use utils::XDG;
@@ -435,7 +435,7 @@ pub fn delete_alias_group(name: &str, xdg: &XDG) -> Result<(), errors::DeleteAli
             name
         )))?;
     if Path::new(&alias.path).exists() {
-        trash::delete(&alias.path)?;
+        delete(&alias.path)?;
     }
     untrack_alias_group(name, xdg)?;
     Ok(())

@@ -74,9 +74,9 @@ fn test_delete_alias_group() {
     let home_dir_path = gen_test_home_path(unique_name);
     let alias_group_path = home_dir_path.join("group1");
     let alias_group_path2 = home_dir_path.join("group2");
-    create_alias_group("group1", alias_group_path.to_str().unwrap(), false, &xdg);
-    create_alias_group("group2", alias_group_path2.to_str().unwrap(), false, &xdg);
-    delete_alias_group("group1", &xdg);
+    create_alias_group("group1", alias_group_path.to_str().unwrap(), false, &xdg).unwrap();
+    create_alias_group("group2", alias_group_path2.to_str().unwrap(), false, &xdg).unwrap();
+    delete_alias_group("group1", &xdg).unwrap();
 
     assert!(!alias_group_path.exists(), "The alias group path still exists");
     let config = Config::load(None, &xdg).expect("Could not load config");

@@ -1,5 +1,8 @@
 use std::env;
 use std::path::{Path, PathBuf};
+use std::fs;
+
+use crate::errors;
 
 pub mod types {
     pub type AliasGroupName = String;
@@ -94,4 +97,16 @@ pub fn pretty_print_table(rows: Vec<Vec<String>>, headers: Vec<String>) {
             .collect();
         println!("{}", padded_row.join(" | "));
     }
+}
+
+/// Use trash to delete unless env var "DONNA_CLI_USE_TRASH" is set to "false"
+pub fn delete(path: &str) -> Result<(), errors::DeleteError> {
+    let use_trash = env::var("DONNA_CLI_USE_TRASH").unwrap_or_else(|_| "false".to_string());
+    let path = Path::new(path);
+    if use_trash == "false" {
+        fs::remove_dir_all(path)?;
+    } else  {
+        trash::delete(path)?;
+    } 
+    Ok(())
 }

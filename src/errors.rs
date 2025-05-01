@@ -281,7 +281,7 @@ pub enum DeleteAliasGroupError {
 
     // trash error
     #[error("Trash error: {0}")]
-    TrashError(#[from] trash::Error),
+    DeleteErrr(#[from] DeleteError),
 
     // untrack alias group error
     #[error("Untrack alias group error: {0}")]
@@ -411,6 +411,17 @@ pub enum SetDefaultLibError {
     // lib not tracked
     #[error("Lib not tracked: {0}")]
     LibNotTracked(#[from] LibNotTrackedError),
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum DeleteError {
+    // trash error
+    #[error("Trash error: {0}")]
+    TrashError(#[from] trash::Error),
+
+    // io error
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
 }
 
 // #[derive(thiserror::Error, Debug)]
