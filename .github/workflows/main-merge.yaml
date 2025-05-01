@@ -4,6 +4,9 @@ on:
   push:
     branches: [ master ]
 
+env:
+  GITHUB_TOKEN: ${{ secrets.PAT }}
+
 jobs:
   create-release:
     name: Create Release on Main
@@ -22,8 +25,6 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           
       - name: Create Tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
