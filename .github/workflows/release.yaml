@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_run:
+    workflows: [Main Branch Release]
+    types:
+      - completed
 
 jobs:
   build:
