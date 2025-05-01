@@ -1,0 +1,27 @@
+name: Main Branch Release
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  create-release:
+    name: Create Release on Main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Get version from Cargo.toml
+        id: get_version
+        run: |
+          VERSION=$(grep '^version =' Cargo.toml | head -1 | sed 's/.*= "//' | sed 's/".*//')
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          
+      - name: Create Tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a v${{ steps.get_version.outputs.version }} -m "Release v${{ steps.get_version.outputs.version }}"
+          git push origin v${{ steps.get_version.outputs.version }}

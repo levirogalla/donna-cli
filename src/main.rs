@@ -1,8 +1,15 @@
 use std::{f32::consts::E, io::Write};
 
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
+use clap_complete::{Shell, generate, ValueHint};
 use donna::{
-    create_alias_group, create_lib, create_project, define_project_type, env_setup, errors::{ConfigError, CreateAliasGroupError, CreateLibError, CreateProjectError, GetAliasGroupsError, GetLibsError, GetProjectPathError, GetProjectTypesError, GetProjectsError, ProjectTypeDefinitionError, UntrackAliasGroupError, UntrackLibError, UntrackProjectTypeError}, get_alias_groups, get_libraries, get_project_path, get_project_types, get_projects, open_project, set_builders_path_prefix, set_default_lib, set_openers_path_prefix, untrack_alias_group, untrack_library, untrack_project_type, utils
+    create_alias_group, create_lib, create_project, define_project_type, env_setup,
+    errors::{
+        ConfigError, CreateAliasGroupError, CreateLibError, CreateProjectError, GetAliasGroupsError, GetLibsError, GetProjectPathError, GetProjectTypesError, GetProjectsError, OpenProjectError, ProjectTypeDefinitionError, UntrackAliasGroupError, UntrackLibError, UntrackProjectTypeError
+    },
+    get_alias_groups, get_libraries, get_project_path, get_project_types, get_projects,
+    open_project, set_builders_path_prefix, set_default_lib, set_openers_path_prefix,
+    untrack_alias_group, untrack_library, untrack_project_type, utils, ProjectConfig,
 };
 use env_logger;
 
@@ -38,11 +45,16 @@ enum Commands {
         name: String,
 
         /// Path to the library directory
+        #[arg(value_hint(ValueHint::DirPath))]
         path: String,
 
         /// Set the library as the default
         #[arg(short = 'd', long, default_value_t = false)]
         default: bool,
+
+        /// Only import new projects, ie projects that don't have a config file, defaults to true
+        #[arg(short = 'n', long, default_value_t = true)]
+        new: bool,
 
         /// Default type of all projects unless specified otherwise
         #[arg(short = 't', long)]
@@ -72,10 +84,16 @@ enum Commands {
     //     /// Name of the project
     //     name: String,
     // },
+    
     Forget {
         #[command(subcommand)]
         entity: ForgetEntity,
     },
+
+    Completion {
+        #[arg(value_enum)]
+        shell: Shell,
+    }
 }
 
 #[derive(Subcommand, Debug)]
@@ -259,7 +277,6 @@ fn handle_config_error(error: ConfigError) {
             println!("Error saving config file.");
         }
     }
-    
 }
 
 fn main() {
@@ -273,6 +290,15 @@ fn main() {
     env_setup::setup_pm(&xdg);
 
     match &args.command {
+        Commands::Completion { shell } => {
+            let mut app = Cli::command();
+            let mut buf = Vec::new();
+            generate(*shell, &mut app, "donna", &mut buf);
+            let out = String::from_utf8(buf).unwrap();
+            println!("{}", out);
+            return;
+        }
+
         Commands::Create { entity } => match entity {
             CreateEntity::Project {
                 name,
@@ -377,7 +403,6 @@ fn main() {
                         println!("Error getting projects: {}", err);
                         return;
                     }
-
                 };
                 let projects: Vec<(
                     Option<String>,
@@ -444,12 +469,11 @@ fn main() {
                     Err(GetLibsError::ConfigError(err)) => {
                         handle_config_error(err);
                         return;
-                    },
+                    }
                     Err(err) => {
                         println!("Error getting libraries: {}", err);
                         return;
                     }
-                    
                 };
                 let rows: Vec<Vec<String>> = libs
                     .iter()
@@ -465,7 +489,7 @@ fn main() {
                     Err(GetAliasGroupsError::ConfigError(err)) => {
                         handle_config_error(err);
                         return;
-                    },
+                    }
                     Err(err) => {
                         println!("Error getting alias groups: {}", err);
                         return;
@@ -484,10 +508,6 @@ fn main() {
                     Ok(types) => types,
                     Err(GetProjectTypesError::ConfigError(err)) => {
                         handle_config_error(err);
-                        return;
-                    },
-                    Err(err) => {
-                        println!("Error getting project types: {}", err);
                         return;
                     }
                 };
@@ -519,6 +539,7 @@ fn main() {
             name,
             path,
             default,
+            new,
             project_type,
             yes,
         } => {
@@ -542,6 +563,15 @@ fn main() {
                     continue;
                 }
                 let project_name = path.file_name().unwrap().to_str().unwrap();
+
+                if *new && ProjectConfig::load(
+                    path.join(ProjectConfig::PROJECT_ROOT_REL_PATH)
+                        .to_str()
+                        .unwrap(),
+                ).is_ok() {
+                    println!("Project '{}' already exists, skipping.", project_name);
+                    continue;
+                }
 
                 let mut project_type = project_type.clone();
                 if !*yes {
@@ -632,7 +662,7 @@ fn main() {
                 terminal,
             } => match terminal {
                 true => {
-                    let path= match get_project_path(name, lib.as_deref(), &xdg) {
+                    let path = match get_project_path(name, lib.as_deref(), &xdg) {
                         Ok(path) => path,
                         Err(GetProjectPathError::ConfigError(config_error)) => {
                             handle_config_error(config_error);
@@ -646,7 +676,18 @@ fn main() {
                     println!("{}", path.to_str().unwrap());
                 }
                 false => {
-                    open_project(name, lib.as_deref(), &xdg);
+                    match open_project(name, lib.as_deref(), &xdg) {
+                        Ok(_) => {
+                            println!("Project '{}' opened successfully.", name);
+                        }
+                        Err(OpenProjectError::ConfigError(config_error)) => {
+                            handle_config_error(config_error);
+                            return;
+                        }
+                        Err(err) => {
+                            println!("Error opening project: {}", err);
+                        }
+                    };
                 }
             },
         },
@@ -676,7 +717,7 @@ fn main() {
                     Err(GetLibsError::ConfigError(err)) => {
                         handle_config_error(err);
                         return;
-                    },
+                    }
                     Err(err) => {
                         println!("Error getting libraries: {}", err);
                         return;
@@ -705,7 +746,7 @@ fn main() {
                     Err(GetProjectTypesError::ConfigError(err)) => {
                         handle_config_error(err);
                         return;
-                    },
+                    }
                     Err(err) => {
                         println!("Error getting project types: {}", err);
                         return;
