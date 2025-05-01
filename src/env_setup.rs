@@ -33,8 +33,8 @@ pub fn get_data_path(xdg: &XDG) -> String {
 }
 
 pub fn setup_pm(xdg: &XDG) {
-    let config_dir = get_config_path(&xdg);
-    let data_dir = get_data_path(&xdg); // don't know if im gonna need this yet
+    let config_dir = get_config_path(xdg);
+    let data_dir = get_data_path(xdg); // don't know if im gonna need this yet
     let config_file_path = Path::new(&config_dir).join("config.toml");
     let directories: [(&str, &str, FS); 3] = [
         (&config_dir, "Config Root", FS::Folder),

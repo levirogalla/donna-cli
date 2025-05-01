@@ -1,4 +1,4 @@
-use std::{f32::consts::E, io::Write};
+use std::io::Write;
 
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, Shell, ValueHint};
@@ -14,7 +14,6 @@ use donna::{
     open_project, set_builders_path_prefix, set_default_lib, set_openers_path_prefix,
     untrack_alias_group, untrack_library, untrack_project_type, utils, ProjectConfig,
 };
-use env_logger;
 
 /// Hi, I'm Donna, the best project manager, ever!
 #[derive(Parser, Debug)]
@@ -298,7 +297,6 @@ fn main() {
             generate(*shell, &mut app, "donna", &mut buf);
             let out = String::from_utf8(buf).unwrap();
             println!("{}", out);
-            return;
         }
 
         Commands::Create { entity } => match entity {
@@ -370,7 +368,7 @@ fn main() {
             } => {
                 match define_project_type(
                     name,
-                    default_groups.as_ref().map(|v| v.clone()),
+                    default_groups.clone(),
                     builder.as_deref(),
                     opener.as_deref(),
                     *redefine,
@@ -406,12 +404,15 @@ fn main() {
                         return;
                     }
                 };
-                let projects: Vec<(
+
+                // Add this near the top of your file with other imports
+                type ProjectRow = (
                     Option<String>,
                     Option<String>,
                     Option<String>,
                     Option<String>,
-                )> = projects_map
+                );
+                let projects: Vec<ProjectRow> = projects_map
                     .iter()
                     .map(|d| {
                         let project_name = Some(d.0.clone());
@@ -680,20 +681,17 @@ fn main() {
                     };
                     println!("{}", path.to_str().unwrap());
                 }
-                false => {
-                    match open_project(name, lib.as_deref(), &xdg) {
-                        Ok(_) => {
-                            println!("Project '{}' opened successfully.", name);
-                        }
-                        Err(OpenProjectError::ConfigError(config_error)) => {
-                            handle_config_error(config_error);
-                            return;
-                        }
-                        Err(err) => {
-                            println!("Error opening project: {}", err);
-                        }
-                    };
-                }
+                false => match open_project(name, lib.as_deref(), &xdg) {
+                    Ok(_) => {
+                        println!("Project '{}' opened successfully.", name);
+                    }
+                    Err(OpenProjectError::ConfigError(config_error)) => {
+                        handle_config_error(config_error);
+                    }
+                    Err(err) => {
+                        println!("Error opening project: {}", err);
+                    }
+                },
             },
         },
 
@@ -702,20 +700,17 @@ fn main() {
         }
 
         Commands::Forget { entity } => match entity {
-            ForgetEntity::AliasGroup { name } => {
-                match untrack_alias_group(name, &xdg) {
-                    Ok(_) => {
-                        println!("Alias group '{}' untracked successfully.", name);
-                    }
-                    Err(UntrackAliasGroupError::ConfigError(config_error)) => {
-                        handle_config_error(config_error);
-                        return;
-                    }
-                    Err(err) => {
-                        println!("Error untracking alias group: {}", err);
-                    }
-                };
-            }
+            ForgetEntity::AliasGroup { name } => match untrack_alias_group(name, &xdg) {
+                Ok(_) => {
+                    println!("Alias group '{}' untracked successfully.", name);
+                }
+                Err(UntrackAliasGroupError::ConfigError(config_error)) => {
+                    handle_config_error(config_error);
+                }
+                Err(err) => {
+                    println!("Error untracking alias group: {}", err);
+                }
+            },
             ForgetEntity::Library { name } => {
                 let libraries = match get_libraries(&xdg) {
                     Ok(libraries) => libraries,
@@ -735,12 +730,11 @@ fn main() {
                         }
                         Err(UntrackLibError::ConfigError(config_error)) => {
                             handle_config_error(config_error);
-                            return;
                         }
                         Err(err) => {
                             println!("Error untracking library: {}", err);
                         }
-                    };
+                    }
                 } else {
                     println!("Library '{}' not found.", name);
                 }
@@ -752,10 +746,6 @@ fn main() {
                         handle_config_error(err);
                         return;
                     }
-                    Err(err) => {
-                        println!("Error getting project types: {}", err);
-                        return;
-                    }
                 };
                 if project_types.contains_key(name) {
                     match untrack_project_type(name, &xdg) {
@@ -764,12 +754,11 @@ fn main() {
                         }
                         Err(UntrackProjectTypeError::ConfigError(config_error)) => {
                             handle_config_error(config_error);
-                            return;
                         }
                         Err(err) => {
                             println!("Error untracking project type: {}", err);
                         }
-                    };
+                    }
                 } else {
                     println!("Project type '{}' not found.", name);
                 }

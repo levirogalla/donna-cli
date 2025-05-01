@@ -2,7 +2,7 @@ use super::utils::{types, XDG};
 use crate::errors::{ConfigError, ProjectConfigError};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use std::{collections::HashMap, error::Error, fs};
+use std::{collections::HashMap, fs};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Config {
@@ -172,12 +172,11 @@ impl Config {
     pub fn get_project_type(&self, name: types::ProjectTypeName) -> Option<&ProjectType> {
         self.project_types
             .as_ref()
-            .map(|project_types| project_types.get(&name))
-            .flatten()
+            .and_then(|project_types| project_types.get(&name))
     }
 
     pub fn get_libs(&self) -> Option<HashMap<types::LibraryName, String>> {
-        self.library_paths.as_ref().map(|libs| libs.clone())
+        self.library_paths.clone()
     }
 
     pub fn set_builders_path_prefix(&mut self, path: &str) {
@@ -189,15 +188,11 @@ impl Config {
     }
 
     pub fn get_alias_groups(&self) -> Option<HashMap<types::AliasGroupName, AliasGroup>> {
-        self.alias_groups
-            .as_ref()
-            .map(|alias_groups| alias_groups.clone())
+        self.alias_groups.clone()
     }
 
     pub fn get_project_types(&self) -> Option<HashMap<types::ProjectTypeName, ProjectType>> {
-        self.project_types
-            .as_ref()
-            .map(|project_types| project_types.clone())
+        self.project_types.clone()
     }
 
     pub fn get_default_lib(&self) -> Option<types::LibraryName> {

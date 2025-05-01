@@ -14,15 +14,11 @@ pub mod errors;
 pub mod utils; // re export for tests
 
 use config_io::ProjectType;
-use errors::UntrackAliasGroupError;
 use mlua::Lua;
 use std::collections::HashMap;
-use std::fmt::format;
-use std::ops::Not;
 use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
 use std::{collections::HashSet, fs};
-use trash;
 use utils::{delete, to_full_path};
 
 pub use config_io::{AliasGroup, Config, ProjectConfig};
@@ -64,7 +60,7 @@ pub fn define_project_type(
             "Project type {} already exists",
             name
         )))?
-    } else if redefine && !config.get_project_type(name.to_string()).is_some() {
+    } else if redefine && config.get_project_type(name.to_string()).is_none() {
         Err(errors::ProjectTypeNotTrackedError(format!(
             "Project type {} does not exist",
             name
@@ -130,7 +126,7 @@ pub fn create_lib(
     already_exists: bool,
     xdg: &XDG,
 ) -> Result<(), errors::CreateLibError> {
-    let mut config = Config::load(None, &xdg)?;
+    let mut config = Config::load(None, xdg)?;
     let path = &to_full_path(path);
     if !already_exists {
         if path.exists() {
@@ -199,9 +195,7 @@ pub fn create_project(
             panic!("Something weird happened, project config file exists but not the directory");
         } // not possible
         (false, true, false) | (false, true, true) => {
-            Err(errors::ProjectPathExistsError(format!(
-                "Project config directory and/or file already exists, set already_exists to true if this is intended"
-            )))?;
+            Err(errors::ProjectPathExistsError("Project config directory and/or file already exists, set already_exists to true if this is intended".to_string()))?;
         }
         (true, false, false) => {
             fs::create_dir(project_config_dir)?;
@@ -277,7 +271,7 @@ pub fn create_project(
             .push(alias_group.to_string());
         symlink(&project_path, alias_path)?;
     }
-    project_config.save(&project_config_file_path.to_str().unwrap())?;
+    project_config.save(project_config_file_path.to_str().unwrap())?;
 
     Ok(())
 }
@@ -332,11 +326,9 @@ pub fn get_project_path(
     xdg: &XDG,
 ) -> Result<PathBuf, errors::GetProjectPathError> {
     let config = Config::load(None, xdg).expect("Could not load config");
-    let path = Path::new(
-        config
-            .get_lib_path(lib)
-            .ok_or(errors::LibNotTrackedError(format!("Library not tracked")))?,
-    )
+    let path = Path::new(config.get_lib_path(lib).ok_or(errors::LibNotTrackedError(
+        "Library not tracked".to_string(),
+    ))?)
     .join(name);
     if !path.exists() {
         Err(errors::ProjectPathDoesNotExistError(format!(
@@ -361,7 +353,7 @@ pub fn update_alias_group(
     xdg: &XDG,
 ) -> Result<(), errors::UpdateAliasGroupError> {
     let mut config = Config::load(None, xdg)?;
-    let new_path = new_path.map(|p| to_full_path(p));
+    let new_path = new_path.map(to_full_path);
     let alias = config
         .delete_alias_group(name)
         .ok_or(errors::AliasGroupNotTrackedError(format!(
@@ -401,7 +393,7 @@ pub fn untrack_alias_group(name: &str, xdg: &XDG) -> Result<(), errors::UntrackA
             name
         )))?;
     config.save(None, xdg)?;
-    let project = get_projects(&xdg)?;
+    let project = get_projects(xdg)?;
     for (_, (_, _, path)) in project.iter() {
         let project_config_path = Path::new(path).join(ProjectConfig::PROJECT_ROOT_REL_PATH);
         let mut project_config = ProjectConfig::load(project_config_path.to_str().unwrap())?;
@@ -415,7 +407,7 @@ pub fn untrack_alias_group(name: &str, xdg: &XDG) -> Result<(), errors::UntrackA
             let mut new_alias_groups = project_config.tracked_alias_groups.clone().unwrap();
             new_alias_groups.retain(|x| x != name);
             project_config.tracked_alias_groups = Some(new_alias_groups);
-            project_config.save(&project_config_path.to_str().unwrap())?;
+            project_config.save(project_config_path.to_str().unwrap())?;
         }
     }
 
@@ -489,7 +481,7 @@ pub fn untrack_project_type(name: &str, xdg: &XDG) -> Result<(), errors::Untrack
         if project_config.project_type.as_deref() == Some(name) {
             log::info!("Deleting project type from project {}", name);
             project_config.project_type = None;
-            project_config.save(&project_config_path.to_str().unwrap())?;
+            project_config.save(project_config_path.to_str().unwrap())?;
         }
     }
     Ok(())
@@ -510,7 +502,7 @@ pub fn get_projects(
 
     for (lib_name, lib_path) in config
         .get_libs()
-        .ok_or(errors::LibNotTrackedError(format!("No libraries found")))?
+        .ok_or(errors::LibNotTrackedError("No libraries found".to_string()))?
         .iter()
     {
         let projects = Path::new(lib_path).read_dir()?.filter_map(|f| {
@@ -549,7 +541,7 @@ pub fn get_libraries(xdg: &XDG) -> Result<HashMap<String, String>, errors::GetLi
     let config = Config::load(None, xdg)?;
     Ok(config
         .get_libs()
-        .ok_or(errors::LibNotTrackedError(format!("No libraries found")))?)
+        .ok_or(errors::LibNotTrackedError("No libraries found".to_string()))?)
 }
 
 /// Get all alias groups that are tracked by donna
@@ -562,9 +554,9 @@ pub fn get_alias_groups(
     let config = Config::load(None, xdg)?;
     Ok(config
         .get_alias_groups()
-        .ok_or(errors::AliasGroupNotTrackedError(format!(
-            "No alias groups found"
-        )))?)
+        .ok_or(errors::AliasGroupNotTrackedError(
+            "No alias groups found".to_string(),
+        ))?)
 }
 
 /// Get all project types that are tracked by donna

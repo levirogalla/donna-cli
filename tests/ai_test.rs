@@ -5,35 +5,10 @@ use donna::{
     untrack_alias_group, untrack_library, untrack_project_type, update_alias_group, Config,
     ProjectConfig, XDG,
 };
-use std::collections::{HashMap, HashSet};
-use std::error::Error;
 use std::fs;
-use std::path::{Path, PathBuf};
 
 mod utils;
-use utils::{
-    gen_test_alias_groups_path, gen_test_config_home_path, gen_test_data_home_path,
-    gen_test_home_path, setup_home,
-};
-
-// Helper function to assert that a function returns a specific error type
-macro_rules! assert_err_type {
-    ($result:expr, $err_type:path) => {
-        match $result {
-            Ok(_) => panic!("Expected error, got Ok"),
-            Err(err) => {
-                let is_expected = err.downcast_ref::<$err_type>().is_some();
-                if !is_expected {
-                    panic!(
-                        "Expected error of type {}, got {:?}",
-                        stringify!($err_type),
-                        err
-                    );
-                }
-            }
-        }
-    };
-}
+use utils::{gen_test_alias_groups_path, gen_test_home_path, setup_home};
 
 #[test]
 fn test_define_project_type() {
@@ -108,8 +83,6 @@ fn test_define_project_type() {
 #[test]
 fn test_create_alias_group() {
     let unique_name = "test_create_alias_group";
-    let unique_config_home_name = unique_name.to_string() + "_config";
-    let unique_data_home_name = unique_name.to_string() + "_data";
     let unique_config_home_name = unique_name.to_string() + "_config";
     let unique_data_home_name = unique_name.to_string() + "_data";
     let xdg = XDG::new(
@@ -194,13 +167,14 @@ fn test_create_lib() {
 
     // Test creating library with same name (should fail)
     let another_path = gen_test_home_path(unique_name).join("another");
-    let err_result = create_lib(
+    create_lib(
         "main-lib",
         another_path.to_str().unwrap(),
         false,
         false,
         &xdg,
-    );
+    )
+    .unwrap();
     // We don't test for specific errors here as the behavior for duplicate lib names isn't clear from the implementation
 
     // Test with already_exists flag
@@ -973,7 +947,7 @@ fn test_set_builders_path_prefix() {
     assert!(result.is_ok());
 
     // Verify config was updated
-    let config = Config::load(None, &xdg).unwrap();
+    Config::load(None, &xdg).unwrap();
     // Note: The actual field access would depend on how Config is structured
 
     // Test with non-existent path (should fail)
@@ -1003,7 +977,7 @@ fn test_set_openers_path_prefix() {
     assert!(result.is_ok());
 
     // Verify config was updated
-    let config = Config::load(None, &xdg).unwrap();
+    Config::load(None, &xdg).unwrap();
     // Note: The actual field access would depend on how Config is structured
 
     // Test with non-existent path (should fail)

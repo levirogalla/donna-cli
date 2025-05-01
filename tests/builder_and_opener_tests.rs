@@ -42,10 +42,11 @@ fn test_opener_with_only_defaults() {
         ),
         false,
         &xdg,
-    );
-    create_project("test-proj", Some("test-type"), None, None, false, &xdg);
+    )
+    .unwrap();
+    create_project("test-proj", Some("test-type"), None, None, false, &xdg).unwrap();
 
-    open_project("test-proj", None, &xdg);
+    open_project("test-proj", None, &xdg).unwrap();
 
     let proof_path =
         home_dir_path.join(".local/share/project_manager/projects/test-proj/proof.txt");
@@ -115,20 +116,23 @@ fn test_opener() {
         ),
         false,
         &xdg,
-    );
+    )
+    .unwrap();
     create_alias_group(
         "test-group",
         home_dir_path.join("group").to_str().unwrap(),
         false,
         &xdg,
-    );
+    )
+    .unwrap();
     create_lib(
         "test-lib",
         home_dir_path.join("test-lib").to_str().unwrap(),
         false,
         false,
         &xdg,
-    );
+    )
+    .unwrap();
 
     create_project(
         "test-proj",
@@ -137,8 +141,9 @@ fn test_opener() {
         Some("test-lib"),
         false,
         &xdg,
-    );
-    open_project("test-proj", Some("test-lib"), &xdg);
+    )
+    .unwrap();
+    open_project("test-proj", Some("test-lib"), &xdg).unwrap();
 
     let proof_path = home_dir_path.join("test-lib/test-proj/proof.txt");
     assert!(proof_path.exists());
@@ -205,10 +210,11 @@ fn test_builder_with_only_defaults() {
         ),
         false,
         &xdg,
-    );
-    create_project("test-proj", Some("test-type"), None, None, false, &xdg);
+    )
+    .unwrap();
+    create_project("test-proj", Some("test-type"), None, None, false, &xdg).unwrap();
 
-    open_project("test-proj", None, &xdg);
+    open_project("test-proj", None, &xdg).unwrap();
 
     let proof_path =
         home_dir_path.join(".local/share/project_manager/projects/test-proj/proof.txt");
@@ -278,20 +284,23 @@ fn test_builder() {
         None,
         false,
         &xdg,
-    );
+    )
+    .unwrap();
     create_alias_group(
         "test-group",
         home_dir_path.join("group").to_str().unwrap(),
         false,
         &xdg,
-    );
+    )
+    .unwrap();
     create_lib(
         "test-lib",
         home_dir_path.join("test-lib").to_str().unwrap(),
         false,
         false,
         &xdg,
-    );
+    )
+    .unwrap();
 
     create_project(
         "test-proj",
@@ -300,7 +309,8 @@ fn test_builder() {
         Some("test-lib"),
         false,
         &xdg,
-    );
+    )
+    .unwrap();
 
     let proof_path = home_dir_path.join("test-lib/test-proj/proof.txt");
     assert!(proof_path.exists());

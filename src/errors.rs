@@ -1,5 +1,3 @@
-use clap::error;
-
 // Project errors
 #[derive(thiserror::Error, Debug)]
 #[error("Already tracked: {0}")]

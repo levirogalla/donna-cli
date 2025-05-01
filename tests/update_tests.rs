@@ -19,14 +19,15 @@ fn test_alias_group_update() {
 
     let home_dir_path = gen_test_home_path(unique_name);
     let alias_group_path1 = home_dir_path.join("group1");
-    create_alias_group("group1", alias_group_path1.to_str().unwrap(), false, &xdg);
+    create_alias_group("group1", alias_group_path1.to_str().unwrap(), false, &xdg).unwrap();
     let alias_group_path2 = home_dir_path.join("group2");
     update_alias_group(
         "group1",
         None,
         Some(alias_group_path2.to_str().unwrap()),
         &xdg,
-    );
+    )
+    .unwrap();
 
     assert!(
         alias_group_path2.exists(),
@@ -52,14 +53,15 @@ fn test_alias_group_update() {
     );
 
     let alias_group_path3 = home_dir_path.join("group3");
-    create_alias_group("group3", alias_group_path3.to_str().unwrap(), false, &xdg);
+    create_alias_group("group3", alias_group_path3.to_str().unwrap(), false, &xdg).unwrap();
     let alias_group_path4 = home_dir_path.join("group4");
     update_alias_group(
         "group3",
         Some("group4"),
         Some(alias_group_path4.to_str().unwrap()),
         &xdg,
-    );
+    )
+    .unwrap();
     assert!(
         alias_group_path4.exists(),
         "The updated alias group path does not exist"
@@ -98,8 +100,8 @@ fn test_untrack_alias_group() {
 
     let home_dir_path = gen_test_home_path(unique_name);
     let alias_group_path = home_dir_path.join("group1");
-    create_alias_group("group1", alias_group_path.to_str().unwrap(), false, &xdg);
-    untrack_alias_group("group1", &xdg);
+    create_alias_group("group1", alias_group_path.to_str().unwrap(), false, &xdg).unwrap();
+    untrack_alias_group("group1", &xdg).unwrap();
 
     assert!(
         alias_group_path.exists(),

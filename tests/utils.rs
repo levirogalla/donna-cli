@@ -41,24 +41,22 @@ impl Drop for TestDir {
 }
 
 pub fn gen_test_home_path(unique_name: &str) -> PathBuf {
-    PathBuf::from(
-        env::current_dir()
-            .unwrap()
-            .join("tests/test_home_dirs/")
-            .join(unique_name),
-    )
+    env::current_dir()
+        .unwrap()
+        .join("tests/test_home_dirs/")
+        .join(unique_name)
 }
 
 pub fn gen_test_config_home_path(unique_name: &str) -> PathBuf {
-    PathBuf::from(gen_test_home_path(unique_name)).join(".config")
+    gen_test_home_path(unique_name).join(".config")
 }
 
 pub fn gen_test_data_home_path(unique_name: &str) -> PathBuf {
-    PathBuf::from(gen_test_home_path(unique_name)).join(".local/share")
+    gen_test_home_path(unique_name).join(".local/share")
 }
 
 pub fn gen_test_alias_groups_path(unique_name: &str) -> PathBuf {
-    PathBuf::from(gen_test_home_path(unique_name)).join("alias_groups")
+    gen_test_home_path(unique_name).join("alias_groups")
 }
 
 pub fn set_home_env(unique_name: &str, xdg: &XDG) {
