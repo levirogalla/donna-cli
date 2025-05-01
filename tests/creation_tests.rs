@@ -14,7 +14,9 @@ use rand::prelude::*;
 #[test]
 fn test_fs_setup() {
     let unique_name = "test_fs_setup";
-    let xdg = XDG::new(Some(unique_name));
+        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_data_home_name = unique_name.to_string() + "_data";
+    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
 
     let _cleanup = setup_home(unique_name, &xdg);
 
@@ -33,7 +35,9 @@ fn test_fs_setup() {
 #[test]
 fn test_create_project_no_alias_no_type() {
     let unique_name = "test_create_project_no_alias";
-    let xdg = XDG::new(Some(unique_name));
+        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_data_home_name = unique_name.to_string() + "_data";
+    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
     let _cleanup = setup_home(unique_name, &xdg);
 
     create_project("test-proj", None, None, None, false, &xdg);
@@ -58,7 +62,9 @@ fn test_create_project_no_alias_no_type() {
 #[test]
 fn test_create_alias_group() {
     let unique_name = "test_create_alias_group";
-    let xdg = XDG::new(Some(unique_name));
+        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_data_home_name = unique_name.to_string() + "_data";
+    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
     let _cleanup = setup_home(unique_name, &xdg);
 
     let alias_group_path = gen_test_alias_groups_path(unique_name).join("t-alias");
@@ -75,7 +81,9 @@ fn test_create_alias_group() {
 #[test]
 fn test_create_project_with_alias_and_lib() {
     let unique_name = "test_create_project_with_alias";
-    let xdg = XDG::new(Some(unique_name));
+        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_data_home_name = unique_name.to_string() + "_data";
+    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
     let _cleanup = setup_home(unique_name, &xdg);
 
     create_lib(
@@ -145,7 +153,9 @@ fn test_create_project_with_alias_and_lib() {
 #[test]
 fn test_create_project_with_type() {
     let unique_name = "test_create_project_with_type";
-    let xdg = XDG::new(Some(unique_name));
+        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_data_home_name = unique_name.to_string() + "_data";
+    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
     let _cleanup = setup_home(unique_name, &xdg);
 
     define_project_type("test-project-type", None, None, None, false, &xdg);
@@ -182,7 +192,9 @@ fn test_create_project_with_type() {
 #[test]
 fn test_create_projects_with_libs() {
     let unique_name = "test_create_project_with_lib";
-    let xdg = XDG::new(Some(unique_name));
+        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_data_home_name = unique_name.to_string() + "_data";
+    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
     let _cleanup = setup_home(unique_name, &xdg);
 
     create_lib(
@@ -277,7 +289,9 @@ fn test_create_projects_with_libs() {
 #[test]
 fn test_create_many_projects_with_type_and_alias_and_lib() {
     let unique_name = "test_create_many_projects_with_type_and_alias_and_lib";
-    let xdg = XDG::new(Some(unique_name));
+        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_data_home_name = unique_name.to_string() + "_data";
+    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
     let _cleanup = setup_home(unique_name, &xdg);
 
     let home_path = gen_test_home_path(unique_name);
@@ -480,7 +494,9 @@ fn test_incorrect_usage() {
 #[test]
 fn test_relative_paths_are_handled_properly() {
     let unique_name = "test_relative_paths_are_handled_properly";
-    let xdg = XDG::new(Some(unique_name));
+        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_data_home_name = unique_name.to_string() + "_data";
+    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
     let mut _cleanup = setup_home(unique_name, &xdg);
 
     let cwd = std::env::current_dir().unwrap();

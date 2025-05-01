@@ -9,16 +9,20 @@ pub mod types {
 
 pub struct XDG {
     pub home_var_name: String,
+    pub config_home_name: String,
+    pub data_home_name: String,
 }
 impl XDG {
-    pub fn new(home_var_name: Option<&str>) -> Self {
+    pub fn new(home_var_name: Option<&str>, config_home_name: Option<&str>, data_home_name: Option<&str>) -> Self {
         XDG {
             home_var_name: home_var_name.unwrap_or("HOME").to_string(),
+            config_home_name: config_home_name.unwrap_or("XDG_CONFIG_HOME").to_string(),
+            data_home_name: data_home_name.unwrap_or("XDG_DATA_HOME").to_string(),
         }
     }
 
     pub fn get_config_home(&self) -> String {
-        match env::var("XDG_CONFIG_HOME") {
+        match env::var(&self.config_home_name) {
             Ok(val) => val,
             Err(_) => {
                 let home = env::var(&self.home_var_name).expect("Could not find HOME env variable");
@@ -32,9 +36,10 @@ impl XDG {
     }
 
     pub fn get_data_home(&self) -> String {
-        match env::var("XDG_DATA_HOME") {
+        match env::var(&self.data_home_name) {
             Ok(val) => val,
             Err(_) => {
+                println!("XDG_DATA_HOME not set, using default");
                 let home = env::var(&self.home_var_name).expect("Could not find HOME variable");
                 Path::new(&home)
                     .join(".local/share")

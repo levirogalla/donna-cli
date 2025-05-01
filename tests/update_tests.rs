@@ -12,7 +12,9 @@ use utils::{
 #[test]
 fn test_alias_group_update() {
     let unique_name = "test_alias_group_update";
-    let xdg = XDG::new(Some(unique_name));
+        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_data_home_name = unique_name.to_string() + "_data";
+    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
     let _cleanup = setup_home(unique_name, &xdg);
 
     let home_dir_path = gen_test_home_path(unique_name);
@@ -45,7 +47,9 @@ fn test_alias_group_update() {
 #[test]
 fn test_untrack_alias_group() {
     let unique_name = "test_untrack_alias_group";
-    let xdg = XDG::new(Some(unique_name));
+        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_data_home_name = unique_name.to_string() + "_data";
+    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
     let _cleanup = setup_home(unique_name, &xdg);
 
     let home_dir_path = gen_test_home_path(unique_name);
@@ -62,7 +66,9 @@ fn test_untrack_alias_group() {
 #[test]
 fn test_delete_alias_group() {
     let unique_name = "test_delete_alias_group";
-    let xdg = XDG::new(Some(unique_name));
+        let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_data_home_name = unique_name.to_string() + "_data";
+    let xdg = XDG::new(Some(unique_name), Some(&unique_config_home_name), Some(&unique_data_home_name));
     let _cleanup = setup_home(unique_name, &xdg);
 
     let home_dir_path = gen_test_home_path(unique_name);

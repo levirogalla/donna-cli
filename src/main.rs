@@ -286,7 +286,7 @@ fn main() {
     }
     env_logger::init();
 
-    let xdg = donna::XDG::new(None);
+    let xdg = donna::XDG::new(None, None, None);
     env_setup::setup_pm(&xdg);
 
     match &args.command {

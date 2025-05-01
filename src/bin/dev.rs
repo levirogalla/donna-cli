@@ -14,7 +14,7 @@ fn main() {
     handle_args(); // handles reset and setup commands
 
     // let start = std::time::Instant::now();
-    let xdg = XDG::new(None);
+    let xdg = XDG::new(None, None, None);
     create_alias_group("test", "./test_root/test", false, &xdg);
     define_project_type(
         "test",

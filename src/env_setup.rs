@@ -73,12 +73,12 @@ pub fn handle_args() {
             process::exit(0);
         }
         Some("setup") => {
-            setup_pm(&XDG::new(None));
+            setup_pm(&XDG::new(None, None, None));
             process::exit(0);
         }
         Some("clean") => {
             reset_test_root();
-            setup_pm(&XDG::new(None));
+            setup_pm(&XDG::new(None, None, None));
         }
         _ => {}
     }
