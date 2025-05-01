@@ -1,6 +1,6 @@
 [package]
 name = "donna"
-version = "0.0.10"
+version = "0.0.11"
 edition = "2021"
 default-run = "donna"
 
@@ -8,7 +8,6 @@ default-run = "donna"
 clap = { version = "4.5.27", features = ["derive"] }
 clap_complete = "4.5.48"
 env_logger = "0.11.8"
-git2 = "0.20.1"
 log = "0.4.27"
 mlua = { version = "0.10.3", features = ["lua54", "vendored"] }
 rand = "0.9.0"
