@@ -1,156 +1,212 @@
-# Project Manager (PM) - Project Proposal
+# Donna - CLI Project Manager
 
-## Overview
+[![CI Status](https://github.com/levirogalla/donna-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/levirogalla/donna-cli/actions/workflows/ci.yml)
 
-The **Project Manager (PM)** is a command-line tool designed to help users manage and organize their projects on a computer. It allows users to create projects from templates (e.g., Python sandbox, MATLAB sandbox, Word documents), define custom configurations, and manage project aliases. The tool will also provide health checks to ensure project aliases and metadata are consistent. The PM will be highly customizable, allowing users to define their own project templates, commands, and workflows through a `.config` file and project-specific scripts.
-
-## Design Philosphies
-- Never cause breaking changes to projects inderectly, e.g. changing absolute paths
-- Never make the user reliant on the pm, it is just an extension to the OS file system, projects can still easily be manage via finder, etc
-- Never delete, always use system trash
-
----
+Donna is a powerful command-line project manager designed to help you organize, create, and manage projects across your system. It provides a structured way to manage project libraries, define project types, and simplify access to your work.
 
 ## Features
 
-### 1. **Project Creation**
+- **Project management**: Create, open, and organize projects
+- **Library organization**: Donna encourages you to store all projects in one place called a library, the default is in $XDG_DATA_HOME/project_manager/projects or ~/.local/share/project_manager/projects
+- **Alias groups**: To organize projects, create alias groups, for example a group for wip projects, and a group for python projects, etc. This way you can have the same project in multiple places on your file system. Or if you have c++ coding projects for a class, you could make an alias to your project in both your class' folder and in your c++ projects folder.
+- **Project types**: Define templates and behaviors for different kinds of projects. For example, a python-backed project type would automatically add a new project to the python alias group and backends alias group. You can also define openers and builders for you're project type, these are lua scripts that are called on either `donna open project` or `donna create project`. 
+- **Openers and Builders**: Custom scripting to be called for a project, for example, you could have the following code in the builder for python projects:
 
--   Users can create projects using predefined or custom templates.
--   Example: `pm create --project project-name alias-folders other-information`
--   Templates include:
-    -   **Python Sandbox**: A single-file Python project.
-    -   **MATLAB Sandbox**: A MATLAB project.
-    -   **Word Project**: A Word document project with a `README` for metadata.
--   Users can define their own templates by creating project-type scripts.
+```lua
+os.execute("cd " .. PM_PROJECT_PATH .. " && python3 -m venv env && git init")
+```
 
-### 2. **Alias Management**
+builders and openers have access to the following variables when they are invoked:
 
--   Projects can be assigned to one or more alias group folders (e.g., `Archived`, `Python`, `School`).
--   Aliases can be added via:
-    -   The `.config` file.
-    -   The CLI: `pm create --alias alias-folder-name alias-folder-path`.
--   The PM will maintain a metadata file for each project to track its aliases.
+```lua
+print("PM_PROJECT_NAME: " .. (PM_PROJECT_NAME or "nil"))
+print("PM_PROJECT_PATH: " .. (PM_PROJECT_PATH or "nil"))
+print("PM_ALIAS_GROUP: " .. (PM_ALIAS_GROUP or "nil"))
+print("PM_PROJECT_TYPE: " .. (PM_PROJECT_TYPE or "nil"))
+print("PM_PROJECT_LIB: " .. (PM_PROJECT_LIB or "nil"))
+```
 
-### 3. **Custom Configuration**
+an openers could like like:
 
--   Users define a `.config` file (a Python file) to customize the behavior of the PM.
--   The `.config` file includes:
-    -   Custom scripts for project creation.
-    -   Commands for the CLI.
-    -   Path to the library directory where all projects are stored.
+```lua
+os.execute("cd " .. PM_PROJECT_PATH .. "&& code .")
+```
 
-### 4. **Project-Type Scripts**
+## Installation
 
--   For each project type (e.g., `word`, `python`), users can define a script that specifies:
-    -   How the project should be created.
-    -   What `pm open project-name` should do.
-    -   Other project-specific commands.
--   The PM will automatically pass arguments to these scripts.
--   A Python package will be provided to simplify script creation and interaction with the PM API.
+Download the binary for your system, and add it to your path.
 
-### 5. **Health Checks**
+## Core Concepts
 
--   `pm --checkhealth`:
-    -   Scans all projects in the library directory.
-    -   Ensures all aliases are correctly placed.
-    -   Reports inconsistencies.
--   `pm fix`:
-    -   Attempts to repair inconsistencies in aliases and metadata.
+- **Project**: A directory containing related files for a specific task or application
+- **Library**: A collection of projects in a common root directory
+- **Alias Group**: A directory containing symbolic links to projects
+- **Project Type**: A template defining how projects are created and opened
 
-### 6. **Open Projects**
+## Usage
 
--   Users can open projects using `pm open project-name`.
--   The behavior of this command is defined in the project-type script.
+### Getting Help
 
-### 7. **Extensibility**
+```bash
+donna --help
+```
 
--   Users can download and share project-type scripts created by others.
--   The PM is designed to be flexible, allowing users to define their own workflows and commands.
+### Creating a New Project
 
----
+```bash
+donna create project my-new-project --project-type rust
+```
 
-## Workflow
+### Opening a Project
 
-1. **Setup**:
+```bash
+donna open project my-project
+```
 
-    - Define a `.config` file to specify the library directory, custom scripts, and commands.
-    - Add alias folders using `pm create --alias`.
+To open in terminal mode (prints the path):
 
-2. **Create a Project**:
+```bash
+donna open project my-project --terminal
+```
 
-    - Run `pm create --project project-name alias-folders other-information`.
-    - The PM will use the appropriate project-type script to create the project and assign it to the specified alias folders.
+### Listing Projects
 
-3. **Manage Projects**:
+```bash
+donna list projects
+```
 
-    - Use `pm open project-name` to open a project.
-    - Add or remove aliases using the `.config` file or CLI.
+With additional details:
 
-4. **Health Checks**:
-    - Regularly run `pm --checkhealth` to ensure aliases and metadata are consistent.
-    - Use `pm fix` to repair any issues.
+```bash
+donna list projects --libs --types --paths
+```
 
----
+Or show all information:
 
-## Technical Details
+```bash
+donna list projects --all
+```
 
-### 1. **File Structure**
+### Library Management
 
--   **Library Directory**: Contains all projects.
--   **Project Metadata**: Each project has a metadata file tracking its aliases and other information.
--   **Project-Type Scripts**: Stored in a designated folder, these scripts define how projects are created and managed.
+Create a new library:
 
-### 2. **Configuration File**
+```bash
+donna create lib my-lib /path/to/lib
+```
 
--   A Python file (`config.py`) where users define:
-    -   Library directory path.
-    -   Custom scripts for project creation.
-    -   CLI commands.
-    -   Alias folder paths.
+Set as default:
 
-### 3. **Project-Type Scripts**
+```bash
+donna set default-lib my-lib
+```
 
--   Each script (e.g., `word.py`, `python.py`) defines:
-    -   Project creation logic.
-    -   Commands like `pm open`.
--   The PM provides a Python package to simplify script creation and argument handling.
+List libraries:
 
-### 4. **Health Check Mechanism**
+```bash
+donna list libraries
+```
 
--   The PM scans the library directory and compares actual aliases with metadata.
--   Inconsistencies are reported and can be fixed using `pm fix`.
+### Managing Alias Groups
 
----
+Create an alias group:
 
-## Example Use Cases
+```bash
+donna create alias-group school /path/to/school/projects
+```
 
-1. **Creating a Python Project**:
+List alias groups:
 
-    - Run `pm create --project my-python-project Python`.
-    - The PM uses the `python.py` script to create a Python sandbox project and assigns it to the `Python` alias folder.
+```bash
+donna list alias-groups
+```
 
-2. **Adding an Alias**:
+### Project Types
 
-    - Run `pm create --alias School /path/to/school`.
-    - Assign the `School` alias to a project using the `.config` file or CLI.
+Define a new project type:
 
-3. **Health Check**:
-    - Run `pm --checkhealth` to ensure all aliases are correctly placed.
-    - Use `pm fix` to repair any inconsistencies.
+```bash
+donna create project-type rust --builder path/to/builder.lua --opener path/to/opener.lua
+```
 
----
+List project types:
 
-## Future Enhancements
+```bash
+donna list project-types
+```
 
-1. **GUI Integration**: A graphical interface for users who prefer visual project management.
-2. **Cloud Sync**: Sync projects and metadata across devices using cloud storage.
-3. **Plugin System**: Allow users to extend functionality with plugins.
-4. **Project Sharing**: Enable users to share projects and templates via a centralized repository.
+### Importing Existing Projects
 
----
+```bash
+donna import my-lib /path/to/lib --project-type rust
+```
 
-## Conclusion
+### Managing Configuration
 
-The **Project Manager (PM)** is a powerful and flexible tool for managing projects on a computer. By allowing users to define custom templates, aliases, and workflows, the PM adapts to a wide range of use cases. Its health check and repair features ensure consistency, while its extensibility makes it a valuable tool for both individual users and teams.
+Set builders path:
 
-[![CI Status](https://github.com/levirogalla/donna-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/levirogalla/donna-cli/actions/workflows/ci.yml)
+```bash
+donna set builders-path /path/to/builders
+```
+
+Set openers path:
+
+```bash
+donna set openers-path /path/to/openers
+```
+
+### Forgetting Entities
+
+Untrack a library (doesn't delete files):
+
+```bash
+donna forget library my-lib
+```
+
+Untrack an alias group:
+
+```bash
+donna forget alias-group school
+```
+
+Untrack a project type:
+
+```bash
+donna forget project-type rust
+```
+
+### Shell Completion
+
+**Bash:**
+```bash
+donna completion bash > ~/.bash_completion.d/donna
+```
+
+**Zsh:**
+```bash
+donna completion zsh > "${fpath[1]}/_donna"
+```
+
+**Fish:**
+```bash
+donna completion fish > ~/.config/fish/completions/donna.fish
+```
+
+## Configuration
+
+Donna stores its configuration in `~/.config/donna/config.toml`.
+
+## Design Philosophy
+
+- Never cause breaking changes to projects indirectly
+- Never make users reliant on the tool - it's an extension of the OS file system
+- Projects can still be managed via Finder, Explorer, etc.
+- Never delete files, always use system trash
+
+## Contributing
+
+Contributions are welcome! Feel free to submit issues and pull requests.
+
+## License
+
+[LICENSE TBD]

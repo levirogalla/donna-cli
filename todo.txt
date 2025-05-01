@@ -29,6 +29,8 @@ add better error handling to api, aka add error handling to the api, there is no
 - error handeling for runtime errors in opener and builder
 - creating two alias groups with same name
 
+add default to list libraries
+
 start work on the cli
 move aliases to different groups
 delete aliases
@@ -38,6 +40,7 @@ make projects
 make aliases
 
 add examples to docs
+
 
 
 TESTS:
