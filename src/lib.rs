@@ -16,7 +16,13 @@ pub mod utils; // re export for tests
 use config_io::ProjectType;
 use mlua::Lua;
 use std::collections::HashMap;
+
+#[cfg(unix)]
 use std::os::unix::fs::symlink;
+
+#[cfg(windows)]
+use std::os::windows::fs::symlink_dir as symlink;
+
 use std::path::{Path, PathBuf};
 use std::{collections::HashSet, fs};
 use utils::{delete, to_full_path};
