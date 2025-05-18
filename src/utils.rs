@@ -46,7 +46,7 @@ impl XDG {
         match env::var(&self.data_home_name) {
             Ok(val) => val,
             Err(_) => {
-                println!("XDG_DATA_HOME not set, using default");
+                log::info!("XDG_DATA_HOME not set, using default");
                 let home = env::var(&self.home_var_name).expect("Could not find HOME variable");
                 Path::new(&home)
                     .join(".local/share")

@@ -493,7 +493,7 @@ pub fn untrack_project_type(name: &str, xdg: &XDG) -> Result<(), errors::Untrack
     Ok(())
 }
 
-/// Get all projects that are tracked by donna
+/// Get all projects that are tracked by donna, in all libraries.
 ///
 /// # Arguments
 /// - `xdg` – XDG configuration reference.
@@ -522,7 +522,14 @@ pub fn get_projects(
         for project in projects {
             let project_name = project.file_name().to_string_lossy().to_string();
             let project_config_path = project.path().join(ProjectConfig::PROJECT_ROOT_REL_PATH);
-            let project_config = ProjectConfig::load(project_config_path.to_str().unwrap())?;
+            let project_config =  match ProjectConfig::load(project_config_path.to_str().unwrap()) {
+                Ok(config) => config,
+                Err(e) => {
+                    log::warn!("Failed to load project config for {}: {}", project_name, e);
+                    continue;
+                }
+            };
+
             all_projects_data.insert(
                 project_name,
                 (

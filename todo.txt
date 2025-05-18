@@ -13,35 +13,35 @@ blocked1: no easy way to find all aliases for a project - move a project from on
 done - un track alias group
 done - delete alias group
 
-blocked2: will not track individual alias locations, if you move it out of an alias group then it is on you to keep track of it - blocker1: track aliases for each project in project config? maybe theres a better solution because for this solution if you move an alias group then all projects inside that alias group need to be updated
+revisit - blocked2: will not track individual alias locations, if you move it out of an alias group then it is on you to keep track of it - blocker1: track aliases for each project in project config? maybe theres a better solution because for this solution if you move an alias group then all projects inside that alias group need to be updated
 
-blocker2: track alias groups in .pm config dir
+revisit - blocker2: track alias groups in .pm config dir
 
-delete project types, handle existing projects with that type
+done - delete project types, handle existing projects with that type
 
-if makeing a project that already exisits, like the path already exists, then ask the user if they want to just handoff the project to pm, maybe there can be a flag called auto handoff, this would probably be an error handling improvements, like create project can have a path exists error and the cli would catch that and then run define project instead of create project
-
-add ability to create an alias in a one off location when making a project, in the cli maybe you can make it so it creates an alias at ur current pwd
-
-add support for custom project metadata to be saved in the .pm dir
-
-add better error handling to api, aka add error handling to the api, there is none lol it just panicks for everything
+done - add better error handling to api, aka add error handling to the api, there is none lol it just panicks for everything
 - error handeling for runtime errors in opener and builder
 - creating two alias groups with same name
 
+done - running list projects if one of the projects is missing a .pm/project.toml crashes it
+
+wip - more detailed errors for cli
+ - done - if makeing a project that already exisits, like the path already exists, then ask the user if they want to just handoff the project to pm, maybe there can be a flag called auto handoff, this would probably be an error handling improvements, like create project can have a path exists error and the cli would catch that and then run define project instead of create project
+
 add default to list libraries
 
-start work on the cli
-move aliases to different groups
-delete aliases
-delete projects
-list aliases
-make projects
-make aliases
-
-add examples to docs
+add ability to make and external project, ie, clone a git repo, instead of making the project
 
 
+delete a project aliases from all locations 
+
+add ability to create an alias in a one off location when making a project, in the cli maybe you can make it so it creates an alias at ur current pwd, e.g. path='.'. Make sure to warn the user that if the folder isn't a tracked alias group then donna will not maintain this alias and it is up to the user
+
+check health, go through all tracked alias groups and look for broken links, out of data project.toml's etc.
+
+add support for custom project metadata to be saved in the .pm dir
+
+auto completion for project names and other stuff
 
 TESTS:
 

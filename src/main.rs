@@ -15,12 +15,21 @@ use donna::{
     untrack_alias_group, untrack_library, untrack_project_type, utils, ProjectConfig,
 };
 
-/// Hi, I'm Donna, the best project manager, ever!
+#[derive(clap::ValueEnum, Clone, Debug)]
+enum Verbosity {
+    Debug,
+    Info,
+    Warn,
+    Error,
+}
+
+/// Hi, I'm Donna, the best file seceratery, ever!
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    #[arg(long)]
-    verbose: bool,
+    /// Set the verbosity level (debug, info, warn, error)
+    #[arg(long, value_enum, default_value_t = Verbosity::Info)]
+    verbose: Verbosity,
 
     #[command(subcommand)]
     command: Commands,
@@ -282,8 +291,19 @@ fn handle_config_error(error: ConfigError) {
 
 fn main() {
     let args = Cli::parse();
-    if args.verbose {
-        std::env::set_var("RUST_LOG", "debug");
+    match args.verbose {
+        Verbosity::Debug => {
+            std::env::set_var("RUST_LOG", "debug");
+        }
+        Verbosity::Info => {
+            std::env::set_var("RUST_LOG", "info");
+        }
+        Verbosity::Warn => {
+            std::env::set_var("RUST_LOG", "warn");
+        }
+        Verbosity::Error => {
+            std::env::set_var("RUST_LOG", "error");
+        }
     }
     env_logger::init();
 
