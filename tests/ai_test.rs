@@ -217,7 +217,7 @@ fn test_create_project_basic() {
     create_lib("main-lib", lib_path.to_str().unwrap(), true, false, &xdg).unwrap();
 
     // Test basic project creation
-    let result = create_project("basic-project", None, None, None, false, &xdg);
+    let result = create_project("basic-project", None, None, None, false, None, &xdg);
     assert!(result.is_ok());
 
     // Verify project was created in the default library
@@ -259,6 +259,7 @@ fn test_create_project_with_type() {
         None,
         None,
         false,
+        None,
         &xdg,
     );
     assert!(result.is_ok());
@@ -280,6 +281,7 @@ fn test_create_project_with_type() {
         None,
         None,
         false,
+        None,
         &xdg,
     );
     assert!(err_result.is_err());
@@ -312,7 +314,15 @@ fn test_create_project_with_alias_groups() {
     .unwrap();
 
     // Test creating project with alias group
-    let result = create_project("alias-project", None, Some("dev-alias"), None, false, &xdg);
+    let result = create_project(
+        "alias-project",
+        None,
+        Some("dev-alias"),
+        None,
+        false,
+        None,
+        &xdg,
+    );
     assert!(result.is_ok());
 
     // Verify symlink was created
@@ -340,6 +350,7 @@ fn test_create_project_with_alias_groups() {
         Some("non-existent"),
         None,
         false,
+        None,
         &xdg,
     );
     assert!(err_result.is_err());
@@ -378,7 +389,7 @@ fn test_create_project_in_specific_lib() {
     .unwrap();
 
     // Create project in default lib
-    create_project("default-project", None, None, None, false, &xdg).unwrap();
+    create_project("default-project", None, None, None, false, None, &xdg).unwrap();
 
     // Create project in specific lib
     create_project(
@@ -387,6 +398,7 @@ fn test_create_project_in_specific_lib() {
         None,
         Some("other-lib"),
         false,
+        None,
         &xdg,
     )
     .unwrap();
@@ -396,7 +408,7 @@ fn test_create_project_in_specific_lib() {
     assert!(other_lib_path.join("specific-project").exists());
 
     // Test with non-existent library (should fail)
-    let err_result = create_project("invalid-lib", None, None, Some("non-existent"), false, &xdg);
+    let err_result = create_project("invalid-lib", None, None, Some("non-existent"), false, None, &xdg);
     assert!(err_result.is_err());
 }
 
@@ -417,15 +429,15 @@ fn test_create_project_already_exists() {
     create_lib("lib", lib_path.to_str().unwrap(), true, false, &xdg).unwrap();
 
     // Create project
-    create_project("existing", None, None, None, false, &xdg).unwrap();
+    create_project("existing", None, None, None, false, None, &xdg).unwrap();
 
     // Create project with same name but already_exists=false (should fail)
-    let err_result = create_project("existing", None, None, None, false, &xdg);
+    let err_result = create_project("existing", None, None, None, false, None, &xdg);
     assert!(err_result.is_err());
 
     // Create project with already_exists=true
     fs::create_dir_all(lib_path.join("manual-project")).unwrap();
-    let result = create_project("manual-project", None, None, None, true, &xdg);
+    let result = create_project("manual-project", None, None, None, true, None, &xdg);
     assert!(result.is_ok());
     assert!(lib_path.join("manual-project/.pm/project.toml").exists());
 }
@@ -450,7 +462,7 @@ fn test_open_project() {
     create_lib("lib", lib_path.to_str().unwrap(), true, false, &xdg).unwrap();
 
     // Create a project
-    create_project("basic", None, None, None, false, &xdg).unwrap();
+    create_project("basic", None, None, None, false, None, &xdg).unwrap();
 
     // Test opening non-existent project (should fail)
     let err_result = open_project("non-existent", None, &xdg);
@@ -482,7 +494,7 @@ fn test_get_project_path() {
     create_lib("lib", lib_path.to_str().unwrap(), true, false, &xdg).unwrap();
 
     // Create a project
-    create_project("path-test", None, None, None, false, &xdg).unwrap();
+    create_project("path-test", None, None, None, false, None, &xdg).unwrap();
 
     // Test getting path of existing project
     let result = get_project_path("path-test", None, &xdg);
@@ -575,6 +587,7 @@ fn test_untrack_alias_group() {
         Some("test-alias"),
         None,
         false,
+        None,
         &xdg,
     )
     .unwrap();
@@ -737,6 +750,7 @@ fn test_untrack_project_type() {
         None,
         None,
         false,
+        None,
         &xdg,
     )
     .unwrap();
@@ -788,10 +802,10 @@ fn test_get_projects() {
     define_project_type("type2", None, None, None, false, &xdg).unwrap();
 
     // Create projects
-    create_project("project1", Some("type1"), None, Some("lib1"), false, &xdg).unwrap();
-    create_project("project2", Some("type2"), None, Some("lib1"), false, &xdg).unwrap();
-    create_project("project3", Some("type1"), None, Some("lib2"), false, &xdg).unwrap();
-    create_project("project4", None, None, Some("lib2"), false, &xdg).unwrap();
+    create_project("project1", Some("type1"), None, Some("lib1"), false, None, &xdg).unwrap();
+    create_project("project2", Some("type2"), None, Some("lib1"), false, None, &xdg).unwrap();
+    create_project("project3", Some("type1"), None, Some("lib2"), false, None, &xdg).unwrap();
+    create_project("project4", None, None, Some("lib2"), false, None, &xdg).unwrap();
 
     // Test getting all projects
     let result = get_projects(&xdg);

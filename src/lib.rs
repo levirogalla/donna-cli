@@ -165,6 +165,7 @@ pub fn create_lib(
 /// - `alias_group` – Optional alias group to link the project to.
 /// - `lib` – Optional library name to store the project in.
 /// - `already_exists` – Optional flag to indicate if the project already exists. If it does, it will not call the builder and it will not create the project directory.
+/// - `git_clone` – Optional git repository URL to clone the project from. This will block the builder from running.
 /// - `xdg` – XDG configuration reference.
 pub fn create_project(
     name: &str,
@@ -172,6 +173,7 @@ pub fn create_project(
     alias_group: Option<api_types::AliasName>,
     lib: Option<api_types::LibraryName>,
     already_exists: bool,
+    git_clone: Option<&str>,
     xdg: &XDG,
 ) -> Result<(), errors::CreateProjectError> {
     // TODO: Allow just passing of alias location, maybe you want to make an alias not in a designated alias group, just in like a school folder for example
@@ -192,28 +194,49 @@ pub fn create_project(
         already_exists,
         project_config_dir.exists(),
         project_config_file_path.exists(),
+        git_clone,
     ) {
-        (false, false, false) => {
+        (false, false, false, None) => {
             fs::create_dir_all(project_config_dir)?;
             fs::File::create_new(&project_config_file_path)?;
         }
-        (_, false, true) => {
+        (false, false, false, Some(git_clone)) => {
+
+            let mut command = std::process::Command::new("git");
+            command.arg("clone").arg(git_clone).arg(&project_path);
+            log::info!("Running git clone: {:?}", command);
+            let status = command.status()?;
+            if !status.success() {
+                Err(errors::SubProcessError(format!(
+                    "Error running git clone: {}",
+                    git_clone
+                )))?;
+            }
+            if project_config_dir.exists() {
+                log::error!("There was a .pm dir in the git repo, I don't know how to handle this yet :( Sorry.");
+            } else {
+                fs::create_dir_all(project_config_dir)?;
+                fs::File::create_new(&project_config_file_path)?;
+            }
+        } // not possible
+        (_, false, true, _) => {
             panic!("Something weird happened, project config file exists but not the directory");
         } // not possible
-        (false, true, false) | (false, true, true) => {
+        (false, true, false, _) | (false, true, true, _) => {
             Err(errors::ProjectPathExistsError("Project config directory and/or file already exists, set already_exists to true if this is intended".to_string()))?;
         }
-        (true, false, false) => {
+        (true, false, false, _) => {
             fs::create_dir(project_config_dir)?;
             fs::File::create_new(&project_config_file_path)?;
         }
-        (true, true, false) => {
+        (true, true, false, _) => {
             fs::File::create_new(&project_config_file_path)?;
         }
-        (true, true, true) => {
+        (true, true, true, _) => {
             ProjectConfig::load(project_config_file_path.to_str().unwrap())?;
         }
     }
+
     let mut project_config = ProjectConfig::default();
 
     let mut project_alias_groups: HashSet<&str> = HashSet::new();
@@ -238,7 +261,10 @@ pub fn create_project(
             project_alias_groups.extend(alias_groups.iter().map(|s| s.as_str()));
         }
 
-        if let Some(builder) = &project_type_config.builder {
+        // don't run builder if git clone is specified
+        if project_type_config.builder.is_some() && git_clone.is_none() {
+            let builder = project_type_config.builder.as_ref().unwrap();
+
             let lua = Lua::new();
             let globals = lua.globals();
             globals.set("PM_PROJECT_NAME", name).unwrap();
@@ -522,7 +548,7 @@ pub fn get_projects(
         for project in projects {
             let project_name = project.file_name().to_string_lossy().to_string();
             let project_config_path = project.path().join(ProjectConfig::PROJECT_ROOT_REL_PATH);
-            let project_config =  match ProjectConfig::load(project_config_path.to_str().unwrap()) {
+            let project_config = match ProjectConfig::load(project_config_path.to_str().unwrap()) {
                 Ok(config) => config,
                 Err(e) => {
                     log::warn!("Failed to load project config for {}: {}", project_name, e);

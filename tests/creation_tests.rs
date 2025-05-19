@@ -1,10 +1,11 @@
+use clap::Command;
 use donna::{
     create_alias_group, create_lib, create_project, define_project_type, Config, ProjectConfig, XDG,
 };
 mod utils;
 use utils::{
     gen_test_alias_groups_path, gen_test_config_home_path, gen_test_data_home_path,
-    gen_test_home_path, setup_home,
+    gen_test_home_path, print_fs, setup_home,
 };
 
 use rand::prelude::*;
@@ -47,7 +48,7 @@ fn test_create_project_no_alias_no_type() {
     );
     let _cleanup = setup_home(unique_name, &xdg);
 
-    create_project("test-proj", None, None, None, false, &xdg).unwrap();
+    create_project("test-proj", None, None, None, false, None, &xdg).unwrap();
 
     assert!(gen_test_data_home_path(unique_name)
         .join("project_manager/projects/test-proj")
@@ -130,13 +131,23 @@ fn test_create_project_with_alias_and_lib() {
     )
     .unwrap();
 
-    create_project("test-proj1", None, Some("test-alias1"), None, false, &xdg).unwrap();
+    create_project(
+        "test-proj1",
+        None,
+        Some("test-alias1"),
+        None,
+        false,
+        None,
+        &xdg,
+    )
+    .unwrap();
     create_project(
         "test-proj2",
         None,
         Some("test-alias1"),
         Some("test-external-lib"),
         false,
+        None,
         &xdg,
     )
     .unwrap();
@@ -146,6 +157,7 @@ fn test_create_project_with_alias_and_lib() {
         Some("test-alias2"),
         Some("test-external-lib"),
         false,
+        None,
         &xdg,
     )
     .unwrap();
@@ -191,6 +203,7 @@ fn test_create_project_with_type() {
         None,
         None,
         false,
+        None,
         &xdg,
     )
     .unwrap();
@@ -263,13 +276,14 @@ fn test_create_projects_with_libs() {
     )
     .unwrap();
 
-    create_project("default-proj", None, None, None, false, &xdg).unwrap();
+    create_project("default-proj", None, None, None, false, None, &xdg).unwrap();
     create_project(
         "lib1-proj",
         None,
         None,
         Some("test-non-default-lib1"),
         false,
+        None,
         &xdg,
     )
     .unwrap();
@@ -279,6 +293,7 @@ fn test_create_projects_with_libs() {
         None,
         Some("test-non-default-lib2"),
         false,
+        None,
         &xdg,
     )
     .unwrap();
@@ -295,13 +310,14 @@ fn test_create_projects_with_libs() {
     )
     .unwrap();
 
-    create_project("default-proj-2", None, None, None, false, &xdg).unwrap();
+    create_project("default-proj-2", None, None, None, false, None, &xdg).unwrap();
     create_project(
         "old-default-proj",
         None,
         None,
         Some("test-default-lib"),
         false,
+        None,
         &xdg,
     )
     .unwrap();
@@ -431,7 +447,16 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
             i
         );
 
-        create_project(&project_name, project_type, alias_group, lib, false, &xdg).unwrap();
+        create_project(
+            &project_name,
+            project_type,
+            alias_group,
+            lib,
+            false,
+            None,
+            &xdg,
+        )
+        .unwrap();
 
         created_projects.push(Project {
             name: project_name,
@@ -592,4 +617,88 @@ fn test_relative_paths_are_handled_properly() {
     let config = Config::load(None, &xdg).unwrap();
     assert!(PathBuf::from(config.get_alias_group("group").unwrap().path.as_str()).is_absolute());
     assert!(PathBuf::from(config.get_lib_path(Some("lib")).unwrap()).is_absolute());
+}
+
+#[test]
+fn test_create_project_from_git() {
+    let unique_name = "test_create_project_from_git";
+    let unique_config_home_name = unique_name.to_string() + "_config";
+    let unique_data_home_name = unique_name.to_string() + "_data";
+    let xdg = XDG::new(
+        Some(unique_name),
+        Some(&unique_config_home_name),
+        Some(&unique_data_home_name),
+    );
+    let _cleanup = setup_home(unique_name, &xdg);
+
+    let git_repo_path = gen_test_home_path(unique_name).join("git-repo");
+
+    std::fs::create_dir_all(&git_repo_path).unwrap();
+
+    std::process::Command::new("git")
+        .arg("init")
+        .current_dir(&git_repo_path)
+        .output()
+        .expect("Failed to initialize git repository");
+
+    std::fs::write(
+        git_repo_path.join("README.md"),
+        "# Test Repository\n\nThis is a test repository for cloning.",
+    )
+    .expect("Failed to write README.md");
+
+    // Add and commit the file
+    std::process::Command::new("git")
+        .args(["add", "."])
+        .current_dir(&git_repo_path)
+        .output()
+        .expect("Failed to add files to git");
+
+    std::process::Command::new("git")
+        .args(["commit", "-m", "Initial commit"])
+        .current_dir(&git_repo_path)
+        .env("GIT_AUTHOR_NAME", "Test")
+        .env("GIT_AUTHOR_EMAIL", "test@example.com")
+        .env("GIT_COMMITTER_NAME", "Test")
+        .env("GIT_COMMITTER_EMAIL", "test@example.com")
+        .output()
+        .expect("Failed to commit files");
+
+    create_project(
+        "git-proj",
+        None,
+        None,
+        None,
+        false,
+        Some(git_repo_path.to_str().unwrap()),
+        &xdg,
+    )
+    .unwrap();
+
+    // Verify the project was created properly
+    let project_path = gen_test_data_home_path(unique_name)
+        .join("project_manager/projects")
+        .join("git-proj");
+
+
+    assert!(project_path.exists(), "Project directory should exist");
+    assert!(
+        project_path.join(".git").exists(),
+        "Git directory should exist"
+    );
+    assert!(
+        project_path.join("README.md").exists(),
+        "README.md should be cloned"
+    );
+
+    // Verify the project config
+    let pm_config = ProjectConfig::load(
+        project_path
+            .join(ProjectConfig::PROJECT_ROOT_REL_PATH)
+            .to_str()
+            .unwrap(),
+    );
+    assert!(pm_config.is_ok());
+    assert!(pm_config.as_ref().unwrap().project_type.is_none());
+    assert!(pm_config.as_ref().unwrap().builder.is_none());
 }

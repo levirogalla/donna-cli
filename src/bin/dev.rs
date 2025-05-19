@@ -24,7 +24,7 @@ fn main() {
     )
     .unwrap();
     // // create_lib("lib", "./test_root/lib", true, &xdg);
-    create_project("testproj", Some("test"), None, None, false, &xdg).unwrap();
+    create_project("testproj", Some("test"), None, None, false, None, &xdg).unwrap();
     // open_project("testproj", None, &xdg);
 
     update_alias_group("test", Some("test2"), Some("./test_root/newtest"), &xdg).unwrap();

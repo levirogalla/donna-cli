@@ -129,6 +129,10 @@ enum CreateEntity {
         /// Library for the project
         #[arg(short = 'l', long)]
         library: Option<String>,
+
+        /// Url of git repository to clone, this overides the builder and conficts with handoff
+        #[arg(short = 'u', long)]
+        git_clone: Option<String>,
     },
 
     /// Create a new alias group
@@ -326,6 +330,7 @@ fn main() {
                 project_type,
                 alias_group,
                 library,
+                git_clone,
             } => {
                 match create_project(
                     name,
@@ -333,6 +338,7 @@ fn main() {
                     alias_group.as_deref(),
                     library.as_deref(),
                     *handoff,
+                    git_clone.as_deref(),
                     &xdg,
                 ) {
                     Ok(_) => {
@@ -631,6 +637,7 @@ fn main() {
                     None,
                     Some(name),
                     true,
+                    None,
                     &xdg,
                 ) {
                     Ok(_) => {

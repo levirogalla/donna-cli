@@ -46,3 +46,7 @@ auto completion for project names and other stuff
 TESTS:
 
 creating alias group will overight an exisitng one
+
+CONCEPTS:
+
+'donna do' to run arbtrary user defined scripts on projects, groups, etc

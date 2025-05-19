@@ -1,3 +1,8 @@
+
+#[derive(thiserror::Error, Debug)]
+#[error("Sub process error: {0}")]
+pub struct SubProcessError(pub String);
+
 // Project errors
 #[derive(thiserror::Error, Debug)]
 #[error("Already tracked: {0}")]
@@ -180,6 +185,10 @@ pub enum CreateProjectError {
     // alias group not tracked
     #[error("Alias group not tracked: {0}")]
     AliasGroupNotTracked(#[from] AliasGroupNotTrackedError),
+
+    // sub process error
+    #[error("Sub process error: {0}")]
+    SubProcessError(#[from] SubProcessError),
 }
 
 #[derive(thiserror::Error, Debug)]

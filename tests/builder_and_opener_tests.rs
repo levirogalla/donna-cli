@@ -44,7 +44,7 @@ fn test_opener_with_only_defaults() {
         &xdg,
     )
     .unwrap();
-    create_project("test-proj", Some("test-type"), None, None, false, &xdg).unwrap();
+    create_project("test-proj", Some("test-type"), None, None, false, None, &xdg).unwrap();
 
     open_project("test-proj", None, &xdg).unwrap();
 
@@ -140,6 +140,7 @@ fn test_opener() {
         Some("test-group"),
         Some("test-lib"),
         false,
+        None,
         &xdg,
     )
     .unwrap();
@@ -212,7 +213,7 @@ fn test_builder_with_only_defaults() {
         &xdg,
     )
     .unwrap();
-    create_project("test-proj", Some("test-type"), None, None, false, &xdg).unwrap();
+    create_project("test-proj", Some("test-type"), None, None, false, None, &xdg).unwrap();
 
     open_project("test-proj", None, &xdg).unwrap();
 
@@ -308,6 +309,7 @@ fn test_builder() {
         Some("test-group"),
         Some("test-lib"),
         false,
+        None,
         &xdg,
     )
     .unwrap();
