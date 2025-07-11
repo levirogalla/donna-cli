@@ -87,7 +87,7 @@ enum Commands {
         entity: OpenEntity,
     },
 
-    /// Delete a project, library, alias group, project type
+    /// Delete a project, library, alias group, project type, not implemented yet
     Delete, // /// List all projects
     // List,
     // /// Open a project
@@ -95,6 +95,7 @@ enum Commands {
     //     /// Name of the project
     //     name: String,
     // },
+    /// Forget about an alias group, library, or project type, donna will no longer track it
     Forget {
         #[command(subcommand)]
         entity: ForgetEntity,
@@ -738,6 +739,7 @@ fn main() {
                     println!("Error untracking alias group: {}", err);
                 }
             },
+            
             ForgetEntity::Library { name } => {
                 let libraries = match get_libraries(&xdg) {
                     Ok(libraries) => libraries,
@@ -766,6 +768,7 @@ fn main() {
                     println!("Library '{}' not found.", name);
                 }
             }
+            
             ForgetEntity::ProjectType { name } => {
                 let project_types = match get_project_types(&xdg) {
                     Ok(project_types) => project_types,

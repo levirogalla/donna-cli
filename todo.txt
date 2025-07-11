@@ -25,19 +25,22 @@ done - add better error handling to api, aka add error handling to the api, ther
 
 done - running list projects if one of the projects is missing a .pm/project.toml crashes it
 
-wip - more detailed errors for cli
+done - more detailed errors for cli
  - done - if makeing a project that already exisits, like the path already exists, then ask the user if they want to just handoff the project to pm, maybe there can be a flag called auto handoff, this would probably be an error handling improvements, like create project can have a path exists error and the cli would catch that and then run define project instead of create project
 
-add default to list libraries
+support a list of groups when making a project
+
+add default indicator to list libraries
+
+use formatter for printing tables, probably some crate
 
 add ability to make and external project, ie, clone a git repo, instead of making the project
 
-
-delete a project aliases from all locations 
+delete a project aliases from all expected locations (i.e. alias groups, the user could add an alias anywhere and donna would have know way of finding it unless she scanned the whole user dir)
 
 add ability to create an alias in a one off location when making a project, in the cli maybe you can make it so it creates an alias at ur current pwd, e.g. path='.'. Make sure to warn the user that if the folder isn't a tracked alias group then donna will not maintain this alias and it is up to the user
 
-check health, go through all tracked alias groups and look for broken links, out of data project.toml's etc.
+check health, go through all tracked alias groups and look for broken links, out of date project.toml's etc.
 
 add support for custom project metadata to be saved in the .pm dir
 
