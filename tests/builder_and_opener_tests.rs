@@ -137,7 +137,7 @@ fn test_opener() {
     create_project(
         "test-proj",
         Some("test-type"),
-        Some("test-group"),
+        Some(&["test-group"]),
         Some("test-lib"),
         false,
         None,
@@ -306,7 +306,7 @@ fn test_builder() {
     create_project(
         "test-proj",
         Some("test-type"),
-        Some("test-group"),
+        Some(&["test-group"]),
         Some("test-lib"),
         false,
         None,

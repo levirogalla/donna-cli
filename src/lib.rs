@@ -170,7 +170,7 @@ pub fn create_lib(
 pub fn create_project(
     name: &str,
     project_type: Option<api_types::ProjectTypeName>,
-    alias_group: Option<api_types::AliasName>,
+    alias_groups: Option<&[api_types::AliasName]>,
     lib: Option<api_types::LibraryName>,
     already_exists: bool,
     git_clone: Option<&str>,
@@ -240,8 +240,8 @@ pub fn create_project(
     let mut project_config = ProjectConfig::default();
 
     let mut project_alias_groups: HashSet<&str> = HashSet::new();
-    if let Some(ag) = alias_group {
-        project_alias_groups.insert(ag);
+    if let Some(ags) = alias_groups {
+        project_alias_groups.extend(ags);
     }
 
     if let Some(pt) = project_type {

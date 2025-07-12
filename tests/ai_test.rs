@@ -317,7 +317,7 @@ fn test_create_project_with_alias_groups() {
     let result = create_project(
         "alias-project",
         None,
-        Some("dev-alias"),
+        Some(&["dev-alias"]),
         None,
         false,
         None,
@@ -347,7 +347,7 @@ fn test_create_project_with_alias_groups() {
     let err_result = create_project(
         "invalid-alias",
         None,
-        Some("non-existent"),
+        Some(&["non-existent"]),
         None,
         false,
         None,
@@ -584,7 +584,7 @@ fn test_untrack_alias_group() {
     create_project(
         "tracked-project",
         None,
-        Some("test-alias"),
+        Some(&["test-alias"]),
         None,
         false,
         None,

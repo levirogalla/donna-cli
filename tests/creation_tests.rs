@@ -134,7 +134,7 @@ fn test_create_project_with_alias_and_lib() {
     create_project(
         "test-proj1",
         None,
-        Some("test-alias1"),
+        Some(&["test-alias1"]),
         None,
         false,
         None,
@@ -144,7 +144,7 @@ fn test_create_project_with_alias_and_lib() {
     create_project(
         "test-proj2",
         None,
-        Some("test-alias1"),
+        Some(&["test-alias1"]),
         Some("test-external-lib"),
         false,
         None,
@@ -154,7 +154,7 @@ fn test_create_project_with_alias_and_lib() {
     create_project(
         "test-proj3",
         None,
-        Some("test-alias2"),
+        Some(&["test-alias2"]),
         Some("test-external-lib"),
         false,
         None,
@@ -421,14 +421,14 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
 
     struct Project {
         name: String,
-        alias_group: Option<String>,
+        alias_groups: Option<Vec<String>>,
         lib: Option<String>,
         project_type: Option<String>,
     }
 
     let mut created_projects: Vec<Project> = Vec::new();
 
-    let alias_groups = [Some("alias1"), Some("alias2"), Some("alias3"), None];
+    let alias_groups = ["alias1", "alias2", "alias3"];
     let libs = [Some("lib1"), Some("lib2"), None];
     let project_types = [Some("type1"), Some("type2"), None];
 
@@ -436,13 +436,18 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
 
     for i in 0..1_000 {
         let lib = *libs.choose(&mut rng).unwrap();
-        let alias_group = *alias_groups.choose(&mut rng).unwrap();
+        let alias_groups: Option<Vec<&str>> = match rand::random_bool(0.5) {
+            true => {
+                let count = rng.random_range(1..=3); // Choose 1-3 items
+                Some(alias_groups.choose_multiple(&mut rng, count).cloned().collect())},
+            false => None
+        };
         let project_type = *project_types.choose(&mut rng).unwrap();
 
         let project_name = format!(
             "{}-{}-{}-{}",
             project_type.unwrap_or("default"),
-            alias_group.unwrap_or("default"),
+            alias_groups.as_ref().map_or("default".to_string(), |ag| ag.join("-")),
             lib.unwrap_or("default"),
             i
         );
@@ -450,7 +455,7 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
         create_project(
             &project_name,
             project_type,
-            alias_group,
+            alias_groups.as_deref(),
             lib,
             false,
             None,
@@ -460,7 +465,7 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
 
         created_projects.push(Project {
             name: project_name,
-            alias_group: alias_group.map(|s| s.to_string()),
+            alias_groups: alias_groups.map(|s| s.iter().map(|s| s.to_string()).collect()),
             lib: lib.map(|s| s.to_string()),
             project_type: project_type.map(|s| s.to_string()),
         });
@@ -484,7 +489,7 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
             project.project_type
         );
 
-        match (&project.project_type, &project.alias_group) {
+        match (&project.project_type, &project.alias_groups) {
             (Some(ref project_type), None) if project_type == "type1" => {
                 assert!(home_path.join("alias1").join(&project.name).exists());
                 assert!(home_path.join("alias2").join(&project.name).exists());
@@ -495,56 +500,31 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
                 assert!(!home_path.join("alias2").join(&project.name).exists());
                 assert!(home_path.join("alias3").join(&project.name).exists());
             }
-            (None, Some(ref alias_group)) if alias_group == "alias1" => {
-                assert!(home_path
-                    .join("alias1")
-                    .join(&project.name)
-                    .join(".pm/project.toml")
-                    .exists());
-                assert!(!home_path
-                    .join("alias2")
-                    .join(&project.name)
-                    .join(".pm/project.toml")
-                    .exists());
-                assert!(!home_path
-                    .join("alias3")
-                    .join(&project.name)
-                    .join(".pm/project.toml")
-                    .exists());
-            }
-            (None, Some(ref alias_group)) if alias_group == "alias2" => {
-                assert!(!home_path
-                    .join("alias1")
-                    .join(&project.name)
-                    .join(".pm/project.toml")
-                    .exists());
-                assert!(home_path
-                    .join("alias2")
-                    .join(&project.name)
-                    .join(".pm/project.toml")
-                    .exists());
-                assert!(!home_path
-                    .join("alias3")
-                    .join(&project.name)
-                    .join(".pm/project.toml")
-                    .exists());
-            }
-            (None, Some(ref alias_group)) if alias_group == "alias3" => {
-                assert!(!home_path
-                    .join("alias1")
-                    .join(&project.name)
-                    .join(".pm/project.toml")
-                    .exists());
-                assert!(!home_path
-                    .join("alias2")
-                    .join(&project.name)
-                    .join(".pm/project.toml")
-                    .exists());
-                assert!(home_path
-                    .join("alias3")
-                    .join(&project.name)
-                    .join(".pm/project.toml")
-                    .exists());
+            (None, Some(ref alias_groups)) => {
+                for alias_group in alias_groups {
+                    assert!(home_path
+                        .join(alias_group)
+                        .join(&project.name)
+                        .join(".pm/project.toml")
+                        .exists(),
+                        "Alias group {} not found for project {}",
+                        alias_group,
+                        project.name
+                    );
+                }
+                for alias_group in ["alias1", "alias2", "alias3"] {
+                    if !alias_groups.contains(&alias_group.to_string()) {
+                        assert!(!home_path
+                            .join(alias_group)
+                            .join(&project.name)
+                            .join(".pm/project.toml")
+                            .exists(),
+                            "Alias group {} should not exist for project {}",
+                            alias_group,
+                            project.name
+                        );
+                    }
+                }
             }
             (None, None) => {
                 assert!(!home_path.join("alias1").join(&project.name).exists());
@@ -554,7 +534,7 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
             _ => {
                 println!(
                     "Case not tested: project_type: {:?}, alias_group: {:?}",
-                    project.project_type, project.alias_group
+                    project.project_type, project.alias_groups
                 );
             }
         }
@@ -679,7 +659,6 @@ fn test_create_project_from_git() {
     let project_path = gen_test_data_home_path(unique_name)
         .join("project_manager/projects")
         .join("git-proj");
-
 
     assert!(project_path.exists(), "Project directory should exist");
     assert!(

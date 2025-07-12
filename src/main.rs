@@ -124,8 +124,8 @@ enum CreateEntity {
         project_type: Option<String>,
 
         /// Alias group for the project
-        #[arg(short = 'g', long)]
-        alias_group: Option<String>,
+        #[arg(short = 'g', long, num_args(0..))]
+        alias_groups: Option<Vec<String>>,
 
         /// Library for the project
         #[arg(short = 'l', long)]
@@ -329,14 +329,17 @@ fn main() {
                 name,
                 handoff,
                 project_type,
-                alias_group,
+                alias_groups,
                 library,
                 git_clone,
             } => {
                 match create_project(
                     name,
                     project_type.as_deref(),
-                    alias_group.as_deref(),
+                    alias_groups
+                        .as_ref()
+                        .map(|v| v.iter().map(|s| s.as_str()).collect::<Vec<_>>())
+                        .as_deref(),
                     library.as_deref(),
                     *handoff,
                     git_clone.as_deref(),
@@ -739,7 +742,7 @@ fn main() {
                     println!("Error untracking alias group: {}", err);
                 }
             },
-            
+
             ForgetEntity::Library { name } => {
                 let libraries = match get_libraries(&xdg) {
                     Ok(libraries) => libraries,
@@ -768,7 +771,7 @@ fn main() {
                     println!("Library '{}' not found.", name);
                 }
             }
-            
+
             ForgetEntity::ProjectType { name } => {
                 let project_types = match get_project_types(&xdg) {
                     Ok(project_types) => project_types,

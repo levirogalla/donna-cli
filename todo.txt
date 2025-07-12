@@ -28,7 +28,9 @@ done - running list projects if one of the projects is missing a .pm/project.tom
 done - more detailed errors for cli
  - done - if makeing a project that already exisits, like the path already exists, then ask the user if they want to just handoff the project to pm, maybe there can be a flag called auto handoff, this would probably be an error handling improvements, like create project can have a path exists error and the cli would catch that and then run define project instead of create project
 
-support a list of groups when making a project
+done - support a list of groups when making a project
+
+create a project alias after the project was created
 
 add default indicator to list libraries
 
