@@ -56,7 +56,7 @@ enum Commands {
         name: String,
 
         /// Path to the library directory
-        #[arg(value_hint(ValueHint::DirPath))]
+        #[arg(value_hint = ValueHint::DirPath)]
         path: String,
 
         /// Set the library as the default
@@ -124,6 +124,7 @@ enum CreateEntity {
     /// Create a new project
     Project {
         /// Name of the project
+        #[arg(value_hint = ValueHint::Other)]
         name: String,
 
         /// Whether to create a new directory for the project or handoff an existing one to the pm
@@ -143,16 +144,18 @@ enum CreateEntity {
         library: Option<String>,
 
         /// Url of git repository to clone, this overides the builder and conficts with handoff
-        #[arg(short = 'u', long)]
+        #[arg(short = 'u', long, value_hint = ValueHint::Url)]
         git_clone: Option<String>,
     },
 
     /// Create a new alias group
     AliasGroup {
         /// The internal name of the alias group
+        #[arg(value_hint = ValueHint::Other)]
         name: String,
 
         /// Path to the alias group directory
+        #[arg(value_hint = ValueHint::DirPath)]
         path: String,
 
         /// Whether to create a new directory for the group or handoff an existing one to the pm
@@ -163,9 +166,11 @@ enum CreateEntity {
     /// Create a new library
     Lib {
         /// The internal name of the library
+        #[arg(value_hint = ValueHint::Other)]
         name: String,
 
         /// Path to the library directory
+        #[arg(value_hint = ValueHint::DirPath)]
         path: String,
 
         /// Set the library as the default
@@ -180,16 +185,17 @@ enum CreateEntity {
     /// Create a new project type
     ProjectType {
         /// Name of the project type and project directory name
+        #[arg(value_hint = ValueHint::Other)]
         name: String,
 
         /// Names of default alias group for the project type
         default_groups: Option<Vec<String>>,
 
         /// Path to the opener for the project type
-        #[arg(short, long)]
+        #[arg(short, long, value_hint = ValueHint::ExecutablePath)]
         opener: Option<String>,
         /// Path to the builder for the project type
-        #[arg(short, long)]
+        #[arg(short, long, value_hint = ValueHint::ExecutablePath)]
         builder: Option<String>,
 
         #[arg(short, long, default_value_t = false)]
@@ -241,12 +247,14 @@ enum SetOption {
     /// Builder path prefix
     BuildersPath {
         /// Path to the builders directory
+        #[arg(value_hint = ValueHint::DirPath)]
         path: String,
     },
 
     /// Opener path prefix
     OpenersPath {
         /// Path to the openers directory
+        #[arg(value_hint = ValueHint::DirPath)]
         path: String,
     },
 }
