@@ -101,9 +101,20 @@ enum Commands {
         entity: ForgetEntity,
     },
 
+    /// Generate shell completion scripts
     Completion {
         #[arg(value_enum)]
         shell: Shell,
+    },
+
+    #[command(hide = true, name = "_autocompletion-values")]
+    AutocompletionValues {
+        /// Which entity to get autocompletion values for
+        #[arg(value_enum)]
+        entity: String,
+
+        /// Needed to know whizch projects to list
+        library: Option<String>,
     },
 }
 
@@ -320,9 +331,56 @@ fn main() {
             let mut app = Cli::command();
             let mut buf = Vec::new();
             generate(*shell, &mut app, "donna", &mut buf);
-            let out = String::from_utf8(buf).unwrap();
-            println!("{out}");
+            let completion_script = String::from_utf8(buf).unwrap();
+
+            // Read the custom completion script from file
+            let custom_completion = match shell {
+                Shell::Bash => {
+                    include_str!("sh/bash_completion.sh")
+                }
+                Shell::Zsh => {
+                    include_str!("sh/zsh_completion.sh")
+                }
+                _ => "",
+            };
+
+            // Print the original completion script plus our overrides
+            println!("{}", completion_script);
+            print!("{}", custom_completion);
         }
+
+        Commands::AutocompletionValues { entity, library } => match entity.as_str() {
+            "alias-groups" => {
+                let groups = get_alias_groups(&xdg).unwrap_or_default();
+                for (name, _) in groups {
+                    println!("{name}");
+                }
+            }
+            "libraries" => {
+                let libs = get_libraries(&xdg).unwrap_or_default();
+                for (name, _) in libs {
+                    println!("{name}");
+                }
+            }
+            "project-types" => {
+                let types = get_project_types(&xdg).unwrap_or_default();
+                for (name, _) in types {
+                    println!("{name}");
+                }
+            }
+            "projects" => {
+                let projects = get_projects(&xdg).unwrap_or_default();
+                for (name, (_, project_lib, _)) in projects {
+                    if let Some(lib) = library {
+                        if lib != &project_lib {
+                            continue;
+                        }
+                    }
+                    println!("{name}");
+                }
+            }
+            _ => {}
+        },
 
         Commands::Create { entity } => match entity {
             CreateEntity::Project {
@@ -416,6 +474,7 @@ fn main() {
                 };
             }
         },
+
         Commands::List { entity: list } => match list {
             ListEntity::Projects {
                 libs,

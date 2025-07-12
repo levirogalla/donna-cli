@@ -30,6 +30,8 @@ done - more detailed errors for cli
 
 done - support a list of groups when making a project
 
+wip - auto completion for project names and other stuff
+
 create a project alias after the project was created
 
 add default indicator to list libraries
@@ -46,7 +48,6 @@ check health, go through all tracked alias groups and look for broken links, out
 
 add support for custom project metadata to be saved in the .pm dir
 
-auto completion for project names and other stuff
 
 TESTS:
 
