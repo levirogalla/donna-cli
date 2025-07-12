@@ -1,4 +1,3 @@
-
 #[derive(thiserror::Error, Debug)]
 #[error("Sub process error: {0}")]
 pub struct SubProcessError(pub String);

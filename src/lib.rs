@@ -63,13 +63,11 @@ pub fn define_project_type(
     let mut config = Config::load(None, xdg)?;
     if !redefine && config.get_project_type(name.to_string()).is_some() {
         Err(errors::ProjectTypeAlreadyTrackedError(format!(
-            "Project type {} already exists",
-            name
+            "Project type {name} already exists"
         )))?
     } else if redefine && config.get_project_type(name.to_string()).is_none() {
         Err(errors::ProjectTypeNotTrackedError(format!(
-            "Project type {} does not exist",
-            name
+            "Project type {name} does not exist"
         )))?
     } else {
         config.add_project_type(name.to_string(), default_alias_groups, builder, opener);
@@ -101,8 +99,7 @@ pub fn create_alias_group(
         }
         if config.get_alias_group(name).is_some() {
             Err(errors::AliasGroupAlreadyTrackedError(format!(
-                "Alias group {} already exists",
-                name
+                "Alias group {name} already exists"
             )))?;
         }
         fs::create_dir_all(path)?;
@@ -170,7 +167,7 @@ pub fn create_lib(
 pub fn create_project(
     name: &str,
     project_type: Option<api_types::ProjectTypeName>,
-    alias_group: Option<api_types::AliasName>,
+    alias_groups: Option<&[api_types::AliasName]>,
     lib: Option<api_types::LibraryName>,
     already_exists: bool,
     git_clone: Option<&str>,
@@ -201,15 +198,13 @@ pub fn create_project(
             fs::File::create_new(&project_config_file_path)?;
         }
         (false, false, false, Some(git_clone)) => {
-
             let mut command = std::process::Command::new("git");
             command.arg("clone").arg(git_clone).arg(&project_path);
-            log::info!("Running git clone: {:?}", command);
+            log::info!("Running git clone: {command:?}");
             let status = command.status()?;
             if !status.success() {
                 Err(errors::SubProcessError(format!(
-                    "Error running git clone: {}",
-                    git_clone
+                    "Error running git clone: {git_clone}"
                 )))?;
             }
             if project_config_dir.exists() {
@@ -240,8 +235,8 @@ pub fn create_project(
     let mut project_config = ProjectConfig::default();
 
     let mut project_alias_groups: HashSet<&str> = HashSet::new();
-    if let Some(ag) = alias_group {
-        project_alias_groups.insert(ag);
+    if let Some(ags) = alias_groups {
+        project_alias_groups.extend(ags);
     }
 
     if let Some(pt) = project_type {
@@ -249,8 +244,7 @@ pub fn create_project(
             config
                 .get_project_type(pt.to_string())
                 .ok_or(errors::ProjectTypeNotTrackedError(format!(
-                    "Project type {} does not exist",
-                    pt
+                    "Project type {pt} does not exist"
                 )))?;
 
         project_config.project_type = Some(pt.to_string());
@@ -276,8 +270,7 @@ pub fn create_project(
             if !already_exists {
                 lua.load(fs::read_to_string(builder).map_err(|_| {
                     errors::BuilderPathNotFoundError(format!(
-                        "Builder path {} does not exist",
-                        builder
+                        "Builder path {builder} does not exist"
                     ))
                 })?)
                 .exec()
@@ -292,8 +285,7 @@ pub fn create_project(
             config
                 .get_alias_group(alias_group)
                 .ok_or(errors::AliasGroupNotTrackedError(format!(
-                    "Alias group {} does not exist",
-                    alias_group
+                    "Alias group {alias_group} does not exist"
                 )))?;
         let alias_path = Path::new(&alias.path).join(name);
         project_config
@@ -389,8 +381,7 @@ pub fn update_alias_group(
     let alias = config
         .delete_alias_group(name)
         .ok_or(errors::AliasGroupNotTrackedError(format!(
-            "Alias group {} does not exist",
-            name
+            "Alias group {name} does not exist"
         )))?;
     let old_path = PathBuf::from(alias.path);
     let updated_name = new_name.unwrap_or(name);
@@ -421,8 +412,7 @@ pub fn untrack_alias_group(name: &str, xdg: &XDG) -> Result<(), errors::UntrackA
     config
         .delete_alias_group(name)
         .ok_or(errors::AliasGroupNotTrackedError(format!(
-            "Alias group {} does not exist",
-            name
+            "Alias group {name} does not exist"
         )))?;
     config.save(None, xdg)?;
     let project = get_projects(xdg)?;
@@ -435,7 +425,7 @@ pub fn untrack_alias_group(name: &str, xdg: &XDG) -> Result<(), errors::UntrackA
             .unwrap()
             .contains(&name.to_string())
         {
-            log::info!("Deleting alias group from project {}", name);
+            log::info!("Deleting alias group from project {name}");
             let mut new_alias_groups = project_config.tracked_alias_groups.clone().unwrap();
             new_alias_groups.retain(|x| x != name);
             project_config.tracked_alias_groups = Some(new_alias_groups);
@@ -472,8 +462,7 @@ pub fn delete_alias_group(name: &str, xdg: &XDG) -> Result<(), errors::DeleteAli
     let alias = config
         .get_alias_group(name)
         .ok_or(errors::AliasGroupNotTrackedError(format!(
-            "Alias group {} does not exist",
-            name
+            "Alias group {name} does not exist"
         )))?;
     if Path::new(&alias.path).exists() {
         delete(&alias.path)?;
@@ -488,8 +477,7 @@ pub fn untrack_library(name: &str, xdg: &XDG) -> Result<(), errors::UntrackLibEr
     config
         .delete_lib(name)
         .ok_or(errors::LibNotTrackedError(format!(
-            "Library {} does not exist",
-            name
+            "Library {name} does not exist"
         )))?;
     config.save(None, xdg)?;
     Ok(())
@@ -501,8 +489,7 @@ pub fn untrack_project_type(name: &str, xdg: &XDG) -> Result<(), errors::Untrack
     config
         .delete_project_type(name)
         .ok_or(errors::ProjectTypeNotTrackedError(format!(
-            "Project type {} does not exist",
-            name
+            "Project type {name} does not exist"
         )))?;
     config.save(None, xdg)?;
 
@@ -511,7 +498,7 @@ pub fn untrack_project_type(name: &str, xdg: &XDG) -> Result<(), errors::Untrack
             Path::new(&project.1 .2).join(ProjectConfig::PROJECT_ROOT_REL_PATH);
         let mut project_config = ProjectConfig::load(project_config_path.to_str().unwrap())?;
         if project_config.project_type.as_deref() == Some(name) {
-            log::info!("Deleting project type from project {}", name);
+            log::info!("Deleting project type from project {name}");
             project_config.project_type = None;
             project_config.save(project_config_path.to_str().unwrap())?;
         }
@@ -551,7 +538,7 @@ pub fn get_projects(
             let project_config = match ProjectConfig::load(project_config_path.to_str().unwrap()) {
                 Ok(config) => config,
                 Err(e) => {
-                    log::warn!("Failed to load project config for {}: {}", project_name, e);
+                    log::warn!("Failed to load project config for {project_name}: {e}");
                     continue;
                 }
             };
@@ -615,8 +602,7 @@ pub fn set_builders_path_prefix(
 ) -> Result<(), errors::SetBuildersPathPrefixError> {
     if !Path::new(path).is_dir() {
         Err(errors::BuilderPathNotFoundError(format!(
-            "Path {} does not exist",
-            path
+            "Path {path} does not exist"
         )))?;
     }
     let mut config = Config::load(None, xdg)?;
@@ -631,8 +617,7 @@ pub fn set_openers_path_prefix(
 ) -> Result<(), errors::SetOpenersPathPrefixError> {
     if !Path::new(path).is_dir() {
         Err(errors::OpenerPathNotFoundError(format!(
-            "Path {} does not exist",
-            path
+            "Path {path} does not exist"
         )))?;
     }
     let mut config = Config::load(None, xdg)?;
@@ -645,8 +630,7 @@ pub fn set_default_lib(name: &str, xdg: &XDG) -> Result<(), errors::SetDefaultLi
     let mut config = Config::load(None, xdg)?;
     if config.get_lib_path(Some(name)).is_none() {
         Err(errors::LibNotTrackedError(format!(
-            "Library {} does not exist",
-            name
+            "Library {name} does not exist"
         )))?;
     }
     config.set_default_lib(name.to_string());

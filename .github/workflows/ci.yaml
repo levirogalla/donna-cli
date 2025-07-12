@@ -44,3 +44,29 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Clippy check
         run: cargo clippy -- -D warnings
+
+
+  version-check:
+    name: Version Check
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request' && github.base_ref == 'master') ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/master')
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Check if version was updated
+        run: |
+          # Get current version
+          CURRENT_VERSION=$(grep '^version =' Cargo.toml | head -1 | sed 's/.*= "//' | sed 's/".*//')
+          
+          # Check if tag already exists
+          if git rev-parse "v${CURRENT_VERSION}" >/dev/null 2>&1; then
+            echo "❌ Version ${CURRENT_VERSION} already exists as a tag!"
+            echo "Please update the version in Cargo.toml before merging to main."
+            exit 1
+          else
+            echo "✅ Version ${CURRENT_VERSION} is new!"
+          fi

@@ -23,7 +23,7 @@ fn test_opener_with_only_defaults() {
 
     let home_dir_path = gen_test_home_path(unique_name);
     let mut f = fs::File::create(home_dir_path.join("opener.lua")).unwrap();
-    f.write(b"
+    f.write_all(b"
     local command = string.format(\"cd %s && echo \'%s, %s, %s, %s\' > proof.txt\",
                     PM_PROJECT_PATH, PM_PROJECT_NAME, PM_PROJECT_PATH, PM_PROJECT_TYPE, PM_PROJECT_LIB
                   )
@@ -44,7 +44,16 @@ fn test_opener_with_only_defaults() {
         &xdg,
     )
     .unwrap();
-    create_project("test-proj", Some("test-type"), None, None, false, None, &xdg).unwrap();
+    create_project(
+        "test-proj",
+        Some("test-type"),
+        None,
+        None,
+        false,
+        None,
+        &xdg,
+    )
+    .unwrap();
 
     open_project("test-proj", None, &xdg).unwrap();
 
@@ -97,7 +106,7 @@ fn test_opener() {
 
     let home_dir_path = gen_test_home_path(unique_name);
     let mut f = fs::File::create(home_dir_path.join("opener.lua")).unwrap();
-    f.write(b"
+    f.write_all(b"
       local command = string.format(\"cd %s && echo \'%s, %s, %s, %s\' > proof.txt\",
                       PM_PROJECT_PATH, PM_PROJECT_NAME, PM_PROJECT_PATH, PM_PROJECT_TYPE, PM_PROJECT_LIB
                     )
@@ -137,7 +146,7 @@ fn test_opener() {
     create_project(
         "test-proj",
         Some("test-type"),
-        Some("test-group"),
+        Some(&["test-group"]),
         Some("test-lib"),
         false,
         None,
@@ -192,7 +201,7 @@ fn test_builder_with_only_defaults() {
 
     let home_dir_path = gen_test_home_path(unique_name);
     let mut f = fs::File::create(home_dir_path.join("builder.lua")).unwrap();
-    f.write(b"
+    f.write_all(b"
     local command = string.format(\"cd %s && echo \'%s, %s, %s, %s\' > proof.txt\",
                     PM_PROJECT_PATH, PM_PROJECT_NAME, PM_PROJECT_PATH, PM_PROJECT_TYPE, PM_PROJECT_LIB
                   )
@@ -213,7 +222,16 @@ fn test_builder_with_only_defaults() {
         &xdg,
     )
     .unwrap();
-    create_project("test-proj", Some("test-type"), None, None, false, None, &xdg).unwrap();
+    create_project(
+        "test-proj",
+        Some("test-type"),
+        None,
+        None,
+        false,
+        None,
+        &xdg,
+    )
+    .unwrap();
 
     open_project("test-proj", None, &xdg).unwrap();
 
@@ -266,7 +284,7 @@ fn test_builder() {
 
     let home_dir_path = gen_test_home_path(unique_name);
     let mut f = fs::File::create(home_dir_path.join("builder.lua")).unwrap();
-    f.write(b"
+    f.write_all(b"
       local command = string.format(\"cd %s && echo \'%s, %s, %s, %s\' > proof.txt\",
                       PM_PROJECT_PATH, PM_PROJECT_NAME, PM_PROJECT_PATH, PM_PROJECT_TYPE, PM_PROJECT_LIB
                     )
@@ -306,7 +324,7 @@ fn test_builder() {
     create_project(
         "test-proj",
         Some("test-type"),
-        Some("test-group"),
+        Some(&["test-group"]),
         Some("test-lib"),
         false,
         None,
@@ -318,7 +336,7 @@ fn test_builder() {
     assert!(proof_path.exists());
 
     let proof_contents = fs::read_to_string(&proof_path).unwrap();
-    println!("{}", proof_contents);
+    println!("{proof_contents}");
     assert_eq!(
         proof_contents,
         format!(
