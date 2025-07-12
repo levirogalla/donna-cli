@@ -51,8 +51,8 @@ pub fn setup_pm(xdg: &XDG) {
             FS::File => fs::File::create(path).map(|_| ()),
         };
         match result {
-            Ok(_) => log::info!("{} path created at: {}", name, path),
-            Err(e) => panic!("Error creating {}: {}", name, e),
+            Ok(_) => log::info!("{name} path created at: {path}"),
+            Err(e) => panic!("Error creating {name}: {e}"),
         }
     }
 }
@@ -63,8 +63,8 @@ fn reset_test_root() {
         panic!("TEST_ROOT_PATH is not set to expected value, aborting reset due to risk of deleting unintended files.");
     }
 
-    let config_dir = format!("{}/.config", TEST_ROOT_PATH);
-    let data_dir = format!("{}/.local/share", TEST_ROOT_PATH);
+    let config_dir = format!("{TEST_ROOT_PATH}/.config");
+    let data_dir = format!("{TEST_ROOT_PATH}/.local/share");
 
     let result = fs::remove_dir_all(TEST_ROOT_PATH)
         .and_then(|_| fs::create_dir_all(config_dir))
@@ -72,7 +72,7 @@ fn reset_test_root() {
 
     match result {
         Ok(_) => log::info!("Config directory removed"),
-        Err(e) => log::error!("Error removing config directory: {}", e),
+        Err(e) => log::error!("Error removing config directory: {e}"),
     }
 }
 

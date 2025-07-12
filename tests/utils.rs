@@ -82,8 +82,7 @@ pub fn set_data_env(unique_name: &str) {
 
 pub fn delete_home(unique_name: &str) {
     fs::remove_dir_all(format!(
-        "/Users/levirogalla/Projects/lib/cli-project-manager/tests/home_{}",
-        unique_name
+        "/Users/levirogalla/Projects/lib/cli-project-manager/tests/home_{unique_name}"
     ))
     .unwrap_or_else(|_| {
         println!("Test home directory is already deleted.");
@@ -102,9 +101,9 @@ pub fn print_fs(dir: &str) {
             for entry in entries.flatten() {
                 let path = entry.path();
                 let file_name = entry.file_name().into_string().unwrap_or_default();
-                println!("{}{}", prefix, file_name);
+                println!("{prefix}{file_name}");
                 if path.is_dir() {
-                    print_dir(&path, format!("{}  ", prefix));
+                    print_dir(&path, format!("{prefix}  "));
                 }
             }
         }
@@ -112,9 +111,9 @@ pub fn print_fs(dir: &str) {
 
     let root = Path::new(dir);
     if root.exists() && root.is_dir() {
-        println!("{}", dir);
+        println!("{dir}");
         print_dir(root, String::from("  "));
     } else {
-        println!("Directory does not exist: {}", dir);
+        println!("Directory does not exist: {dir}");
     }
 }

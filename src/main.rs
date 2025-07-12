@@ -321,7 +321,7 @@ fn main() {
             let mut buf = Vec::new();
             generate(*shell, &mut app, "donna", &mut buf);
             let out = String::from_utf8(buf).unwrap();
-            println!("{}", out);
+            println!("{out}");
         }
 
         Commands::Create { entity } => match entity {
@@ -346,13 +346,13 @@ fn main() {
                     &xdg,
                 ) {
                     Ok(_) => {
-                        println!("Project '{}' created successfully.", name);
+                        println!("Project '{name}' created successfully.");
                     }
                     Err(CreateProjectError::ConfigError(config_error)) => {
                         handle_config_error(config_error);
                     }
                     Err(err) => {
-                        println!("Error creating project: {}", err);
+                        println!("Error creating project: {err}");
                     }
                 };
             }
@@ -367,7 +367,7 @@ fn main() {
                         handle_config_error(config_error);
                     }
                     Err(err) => {
-                        println!("Error creating alias group: {}", err);
+                        println!("Error creating alias group: {err}");
                     }
                 };
             }
@@ -379,13 +379,13 @@ fn main() {
             } => {
                 match create_lib(name, path, *default, *handoff, &xdg) {
                     Ok(_) => {
-                        println!("Library '{}' created successfully.", name);
+                        println!("Library '{name}' created successfully.");
                     }
                     Err(CreateLibError::ConfigError(config_error)) => {
                         handle_config_error(config_error);
                     }
                     Err(err) => {
-                        println!("Error creating library: {}", err);
+                        println!("Error creating library: {err}");
                     }
                 };
             }
@@ -405,13 +405,13 @@ fn main() {
                     &xdg,
                 ) {
                     Ok(_) => {
-                        println!("Project type '{}' created successfully.", name);
+                        println!("Project type '{name}' created successfully.");
                     }
                     Err(ProjectTypeDefinitionError::ConfigError(config_error)) => {
                         handle_config_error(config_error);
                     }
                     Err(err) => {
-                        println!("Error creating project type: {}", err);
+                        println!("Error creating project type: {err}");
                     }
                 };
             }
@@ -430,7 +430,7 @@ fn main() {
                         return;
                     }
                     Err(err) => {
-                        println!("Error getting projects: {}", err);
+                        println!("Error getting projects: {err}");
                         return;
                     }
                 };
@@ -504,7 +504,7 @@ fn main() {
                         return;
                     }
                     Err(err) => {
-                        println!("Error getting libraries: {}", err);
+                        println!("Error getting libraries: {err}");
                         return;
                     }
                 };
@@ -524,7 +524,7 @@ fn main() {
                         return;
                     }
                     Err(err) => {
-                        println!("Error getting alias groups: {}", err);
+                        println!("Error getting alias groups: {err}");
                         return;
                     }
                 };
@@ -578,14 +578,14 @@ fn main() {
         } => {
             match create_lib(name, path, *default, true, &xdg) {
                 Ok(_) => {
-                    println!("Library '{}' created successfully.", name);
+                    println!("Library '{name}' created successfully.");
                 }
                 Err(CreateLibError::ConfigError(config_error)) => {
                     handle_config_error(config_error);
                     return;
                 }
                 Err(err) => {
-                    println!("Error creating library: {}", err);
+                    println!("Error creating library: {err}");
                     return;
                 }
             };
@@ -605,15 +605,14 @@ fn main() {
                     )
                     .is_ok()
                 {
-                    println!("Project '{}' already exists, skipping.", project_name);
+                    println!("Project '{project_name}' already exists, skipping.");
                     continue;
                 }
 
                 let mut project_type = project_type.clone();
                 if !*yes {
                     print!(
-                        "Do you want to import the project '{}'? [y/N] ",
-                        project_name
+                        "Do you want to import the project '{project_name}'? [y/N] "
                     );
                     std::io::stdout().flush().unwrap();
                     let mut input = String::new();
@@ -645,14 +644,14 @@ fn main() {
                     &xdg,
                 ) {
                     Ok(_) => {
-                        println!("Project '{}' created successfully.", project_name);
+                        println!("Project '{project_name}' created successfully.");
                     }
                     Err(CreateProjectError::ConfigError(config_error)) => {
                         handle_config_error(config_error);
                         return;
                     }
                     Err(err) => {
-                        println!("Error creating project: {}", err);
+                        println!("Error creating project: {err}");
                         return;
                     }
                 };
@@ -663,30 +662,30 @@ fn main() {
             SetOption::DefaultLib { name } => {
                 match set_default_lib(name, &xdg) {
                     Ok(_) => {
-                        println!("Default library set to '{}'", name);
+                        println!("Default library set to '{name}'");
                     }
                     Err(err) => {
-                        println!("Error setting default library: {}", err);
+                        println!("Error setting default library: {err}");
                     }
                 };
             }
             SetOption::BuildersPath { path } => {
                 match set_builders_path_prefix(path, &xdg) {
                     Ok(_) => {
-                        println!("Builders path set to '{}'", path);
+                        println!("Builders path set to '{path}'");
                     }
                     Err(err) => {
-                        println!("Error setting builders path: {}", err);
+                        println!("Error setting builders path: {err}");
                     }
                 };
             }
             SetOption::OpenersPath { path } => {
                 match set_openers_path_prefix(path, &xdg) {
                     Ok(_) => {
-                        println!("Openers path set to '{}'", path);
+                        println!("Openers path set to '{path}'");
                     }
                     Err(err) => {
-                        println!("Error setting openers path: {}", err);
+                        println!("Error setting openers path: {err}");
                     }
                 };
             }
@@ -706,7 +705,7 @@ fn main() {
                             return;
                         }
                         Err(err) => {
-                            println!("Error getting project path: {}", err);
+                            println!("Error getting project path: {err}");
                             return;
                         }
                     };
@@ -714,13 +713,13 @@ fn main() {
                 }
                 false => match open_project(name, lib.as_deref(), &xdg) {
                     Ok(_) => {
-                        println!("Project '{}' opened successfully.", name);
+                        println!("Project '{name}' opened successfully.");
                     }
                     Err(OpenProjectError::ConfigError(config_error)) => {
                         handle_config_error(config_error);
                     }
                     Err(err) => {
-                        println!("Error opening project: {}", err);
+                        println!("Error opening project: {err}");
                     }
                 },
             },
@@ -733,13 +732,13 @@ fn main() {
         Commands::Forget { entity } => match entity {
             ForgetEntity::AliasGroup { name } => match untrack_alias_group(name, &xdg) {
                 Ok(_) => {
-                    println!("Alias group '{}' untracked successfully.", name);
+                    println!("Alias group '{name}' untracked successfully.");
                 }
                 Err(UntrackAliasGroupError::ConfigError(config_error)) => {
                     handle_config_error(config_error);
                 }
                 Err(err) => {
-                    println!("Error untracking alias group: {}", err);
+                    println!("Error untracking alias group: {err}");
                 }
             },
 
@@ -751,24 +750,24 @@ fn main() {
                         return;
                     }
                     Err(err) => {
-                        println!("Error getting libraries: {}", err);
+                        println!("Error getting libraries: {err}");
                         return;
                     }
                 };
                 if libraries.contains_key(name) {
                     match untrack_library(name, &xdg) {
                         Ok(_) => {
-                            println!("Library '{}' untracked successfully.", name);
+                            println!("Library '{name}' untracked successfully.");
                         }
                         Err(UntrackLibError::ConfigError(config_error)) => {
                             handle_config_error(config_error);
                         }
                         Err(err) => {
-                            println!("Error untracking library: {}", err);
+                            println!("Error untracking library: {err}");
                         }
                     }
                 } else {
-                    println!("Library '{}' not found.", name);
+                    println!("Library '{name}' not found.");
                 }
             }
 
@@ -783,17 +782,17 @@ fn main() {
                 if project_types.contains_key(name) {
                     match untrack_project_type(name, &xdg) {
                         Ok(_) => {
-                            println!("Project type '{}' untracked successfully.", name);
+                            println!("Project type '{name}' untracked successfully.");
                         }
                         Err(UntrackProjectTypeError::ConfigError(config_error)) => {
                             handle_config_error(config_error);
                         }
                         Err(err) => {
-                            println!("Error untracking project type: {}", err);
+                            println!("Error untracking project type: {err}");
                         }
                     }
                 } else {
-                    println!("Project type '{}' not found.", name);
+                    println!("Project type '{name}' not found.");
                 }
             }
         },
