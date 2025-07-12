@@ -611,9 +611,7 @@ fn main() {
 
                 let mut project_type = project_type.clone();
                 if !*yes {
-                    print!(
-                        "Do you want to import the project '{project_name}'? [y/N] "
-                    );
+                    print!("Do you want to import the project '{project_name}'? [y/N] ");
                     std::io::stdout().flush().unwrap();
                     let mut input = String::new();
                     std::io::stdin().read_line(&mut input).unwrap();
