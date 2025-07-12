@@ -353,8 +353,8 @@ fn main() {
             };
 
             // Print the original completion script plus our overrides
-            println!("{}", completion_script);
-            print!("{}", custom_completion);
+            println!("{completion_script}");
+            print!("{custom_completion}");
         }
 
         Commands::AutocompletionValues { entity, library } => match entity.as_str() {
