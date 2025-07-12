@@ -56,7 +56,7 @@ enum Commands {
         name: String,
 
         /// Path to the library directory
-        #[arg(value_hint(ValueHint::DirPath))]
+        #[arg(value_hint = ValueHint::DirPath)]
         path: String,
 
         /// Set the library as the default
@@ -101,9 +101,20 @@ enum Commands {
         entity: ForgetEntity,
     },
 
+    /// Generate shell completion scripts
     Completion {
         #[arg(value_enum)]
         shell: Shell,
+    },
+
+    #[command(hide = true, name = "_autocompletion-values")]
+    AutocompletionValues {
+        /// Which entity to get autocompletion values for
+        #[arg(value_enum)]
+        entity: String,
+
+        /// Needed to know whizch projects to list
+        library: Option<String>,
     },
 }
 
@@ -113,6 +124,7 @@ enum CreateEntity {
     /// Create a new project
     Project {
         /// Name of the project
+        #[arg(value_hint = ValueHint::Other)]
         name: String,
 
         /// Whether to create a new directory for the project or handoff an existing one to the pm
@@ -132,16 +144,18 @@ enum CreateEntity {
         library: Option<String>,
 
         /// Url of git repository to clone, this overides the builder and conficts with handoff
-        #[arg(short = 'u', long)]
+        #[arg(short = 'u', long, value_hint = ValueHint::Url)]
         git_clone: Option<String>,
     },
 
     /// Create a new alias group
     AliasGroup {
         /// The internal name of the alias group
+        #[arg(value_hint = ValueHint::Other)]
         name: String,
 
         /// Path to the alias group directory
+        #[arg(value_hint = ValueHint::DirPath)]
         path: String,
 
         /// Whether to create a new directory for the group or handoff an existing one to the pm
@@ -152,9 +166,11 @@ enum CreateEntity {
     /// Create a new library
     Lib {
         /// The internal name of the library
+        #[arg(value_hint = ValueHint::Other)]
         name: String,
 
         /// Path to the library directory
+        #[arg(value_hint = ValueHint::DirPath)]
         path: String,
 
         /// Set the library as the default
@@ -169,16 +185,17 @@ enum CreateEntity {
     /// Create a new project type
     ProjectType {
         /// Name of the project type and project directory name
+        #[arg(value_hint = ValueHint::Other)]
         name: String,
 
         /// Names of default alias group for the project type
         default_groups: Option<Vec<String>>,
 
         /// Path to the opener for the project type
-        #[arg(short, long)]
+        #[arg(short, long, value_hint = ValueHint::ExecutablePath)]
         opener: Option<String>,
         /// Path to the builder for the project type
-        #[arg(short, long)]
+        #[arg(short, long, value_hint = ValueHint::ExecutablePath)]
         builder: Option<String>,
 
         #[arg(short, long, default_value_t = false)]
@@ -230,12 +247,14 @@ enum SetOption {
     /// Builder path prefix
     BuildersPath {
         /// Path to the builders directory
+        #[arg(value_hint = ValueHint::DirPath)]
         path: String,
     },
 
     /// Opener path prefix
     OpenersPath {
         /// Path to the openers directory
+        #[arg(value_hint = ValueHint::DirPath)]
         path: String,
     },
 }
@@ -320,9 +339,56 @@ fn main() {
             let mut app = Cli::command();
             let mut buf = Vec::new();
             generate(*shell, &mut app, "donna", &mut buf);
-            let out = String::from_utf8(buf).unwrap();
-            println!("{out}");
+            let completion_script = String::from_utf8(buf).unwrap();
+
+            // Read the custom completion script from file
+            let custom_completion = match shell {
+                Shell::Bash => {
+                    include_str!("sh/bash_completion.sh")
+                }
+                Shell::Zsh => {
+                    include_str!("sh/zsh_completion.sh")
+                }
+                _ => "",
+            };
+
+            // Print the original completion script plus our overrides
+            println!("{completion_script}");
+            print!("{custom_completion}");
         }
+
+        Commands::AutocompletionValues { entity, library } => match entity.as_str() {
+            "alias-groups" => {
+                let groups = get_alias_groups(&xdg).unwrap_or_default();
+                for (name, _) in groups {
+                    println!("{name}");
+                }
+            }
+            "libraries" => {
+                let libs = get_libraries(&xdg).unwrap_or_default();
+                for (name, _) in libs {
+                    println!("{name}");
+                }
+            }
+            "project-types" => {
+                let types = get_project_types(&xdg).unwrap_or_default();
+                for (name, _) in types {
+                    println!("{name}");
+                }
+            }
+            "projects" => {
+                let projects = get_projects(&xdg).unwrap_or_default();
+                for (name, (_, project_lib, _)) in projects {
+                    if let Some(lib) = library {
+                        if lib != &project_lib {
+                            continue;
+                        }
+                    }
+                    println!("{name}");
+                }
+            }
+            _ => {}
+        },
 
         Commands::Create { entity } => match entity {
             CreateEntity::Project {
@@ -416,6 +482,7 @@ fn main() {
                 };
             }
         },
+
         Commands::List { entity: list } => match list {
             ListEntity::Projects {
                 libs,
