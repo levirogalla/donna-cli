@@ -30,15 +30,15 @@ done - more detailed errors for cli
 
 done - support a list of groups when making a project
 
-wip - auto completion for project names and other stuff
+done - auto completion for project names and other stuff
+
+add ability to make and external project, ie, clone a git repo, instead of making the project
 
 create a project alias after the project was created
 
-add default indicator to list libraries
+add default indicator to list libraries, maybe also change the default library name, (the one that is set by as default by default, lol, not the default one) so that its less confusing
 
 use formatter for printing tables, probably some crate
-
-add ability to make and external project, ie, clone a git repo, instead of making the project
 
 delete a project aliases from all expected locations (i.e. alias groups, the user could add an alias anywhere and donna would have know way of finding it unless she scanned the whole user dir)
 
