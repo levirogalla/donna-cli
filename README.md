@@ -7,16 +7,16 @@ Donna is a powerful command-line project manager designed to help you organize, 
 ## Features
 
 - **Project management**: Create, open, and organize projects
-- **Library organization**: Donna encourages you to store all projects in one place called a library, the default is in $XDG_DATA_HOME/project_manager/projects or ~/.local/share/project_manager/projects
-- **Alias groups**: To organize projects, create alias groups, for example a group for wip projects, and a group for python projects, etc. This way you can have the same project in multiple places on your file system. Or if you have c++ coding projects for a class, you could make an alias to your project in both your class' folder and in your c++ projects folder.
-- **Project types**: Define templates and behaviors for different kinds of projects. For example, a python-backed project type would automatically add a new project to the python alias group and backends alias group. You can also define openers and builders for you're project type, these are lua scripts that are called on either `donna open project` or `donna create project`. 
-- **Openers and Builders**: Custom scripting to be called for a project, for example, you could have the following code in the builder for python projects:
+- **Library organization**: Donna encourages you to store all projects in one place called a library. The default location is `$XDG_DATA_HOME/project_manager/projects` or `~/.local/share/project_manager/projects`
+- **Alias groups**: Organize projects by creating alias groups - for example, a group for WIP projects and a group for Python projects. This allows you to have the same project accessible from multiple locations on your file system. If you have C++ coding projects for a class, you could create an alias to your project in both your class folder and your C++ projects folder
+- **Project types**: Define templates and behaviors for different kinds of projects. For example, a Python backend project type would automatically add a new project to the Python alias group and backends alias group. You can also define openers and builders for your project type - these are Lua scripts that are called on either `donna open project` or `donna create project`
+- **Openers and Builders**: Custom scripting to be called for a project. For example, you could have the following code in the builder for Python projects:
 
 ```lua
 os.execute("cd " .. PM_PROJECT_PATH .. " && python3 -m venv env && git init")
 ```
 
-builders and openers have access to the following variables when they are invoked:
+Builders and openers have access to the following variables when they are invoked:
 
 ```lua
 print("PM_PROJECT_NAME: " .. (PM_PROJECT_NAME or "nil"))
@@ -26,15 +26,15 @@ print("PM_PROJECT_TYPE: " .. (PM_PROJECT_TYPE or "nil"))
 print("PM_PROJECT_LIB: " .. (PM_PROJECT_LIB or "nil"))
 ```
 
-an openers could like like:
+An opener could look like this:
 
 ```lua
-os.execute("cd " .. PM_PROJECT_PATH .. "&& code .")
+os.execute("cd " .. PM_PROJECT_PATH .. " && code .")
 ```
 
 ## Installation
 
-Download the binary for your system, and add it to your path.
+Download the binary for your system and add it to your PATH.
 
 ## Core Concepts
 
@@ -137,6 +137,8 @@ donna list project-types
 
 ### Importing Existing Projects
 
+Import all projects from a directory:
+
 ```bash
 donna import my-lib /path/to/lib --project-type rust
 ```
@@ -177,6 +179,8 @@ donna forget project-type rust
 
 ### Shell Completion
 
+Generate and install shell completions for a better command-line experience:
+
 **Bash:**
 ```bash
 donna completion bash > ~/.bash_completion.d/donna
@@ -194,14 +198,16 @@ donna completion fish > ~/.config/fish/completions/donna.fish
 
 ## Configuration
 
+## Configuration
+
 Donna stores its configuration in `~/.config/donna/config.toml`.
 
 ## Design Philosophy
 
 - Never cause breaking changes to projects indirectly
 - Never make users reliant on the tool - it's an extension of the OS file system
-- Projects can still be managed via Finder, Explorer, etc.
-- Never delete files, always use system trash
+- Projects can still be managed via Finder, Explorer, or other file managers
+- Never delete files - always use system trash when available
 
 ## Contributing
 
