@@ -408,7 +408,15 @@ fn test_create_project_in_specific_lib() {
     assert!(other_lib_path.join("specific-project").exists());
 
     // Test with non-existent library (should fail)
-    let err_result = create_project("invalid-lib", None, None, Some("non-existent"), false, None, &xdg);
+    let err_result = create_project(
+        "invalid-lib",
+        None,
+        None,
+        Some("non-existent"),
+        false,
+        None,
+        &xdg,
+    );
     assert!(err_result.is_err());
 }
 
@@ -802,9 +810,36 @@ fn test_get_projects() {
     define_project_type("type2", None, None, None, false, &xdg).unwrap();
 
     // Create projects
-    create_project("project1", Some("type1"), None, Some("lib1"), false, None, &xdg).unwrap();
-    create_project("project2", Some("type2"), None, Some("lib1"), false, None, &xdg).unwrap();
-    create_project("project3", Some("type1"), None, Some("lib2"), false, None, &xdg).unwrap();
+    create_project(
+        "project1",
+        Some("type1"),
+        None,
+        Some("lib1"),
+        false,
+        None,
+        &xdg,
+    )
+    .unwrap();
+    create_project(
+        "project2",
+        Some("type2"),
+        None,
+        Some("lib1"),
+        false,
+        None,
+        &xdg,
+    )
+    .unwrap();
+    create_project(
+        "project3",
+        Some("type1"),
+        None,
+        Some("lib2"),
+        false,
+        None,
+        &xdg,
+    )
+    .unwrap();
     create_project("project4", None, None, Some("lib2"), false, None, &xdg).unwrap();
 
     // Test getting all projects

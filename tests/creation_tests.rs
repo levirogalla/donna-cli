@@ -1,11 +1,10 @@
-use clap::Command;
 use donna::{
     create_alias_group, create_lib, create_project, define_project_type, Config, ProjectConfig, XDG,
 };
 mod utils;
 use utils::{
     gen_test_alias_groups_path, gen_test_config_home_path, gen_test_data_home_path,
-    gen_test_home_path, print_fs, setup_home,
+    gen_test_home_path, setup_home,
 };
 
 use rand::prelude::*;
@@ -439,15 +438,23 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
         let alias_groups: Option<Vec<&str>> = match rand::random_bool(0.5) {
             true => {
                 let count = rng.random_range(1..=3); // Choose 1-3 items
-                Some(alias_groups.choose_multiple(&mut rng, count).cloned().collect())},
-            false => None
+                Some(
+                    alias_groups
+                        .choose_multiple(&mut rng, count)
+                        .cloned()
+                        .collect(),
+                )
+            }
+            false => None,
         };
         let project_type = *project_types.choose(&mut rng).unwrap();
 
         let project_name = format!(
             "{}-{}-{}-{}",
             project_type.unwrap_or("default"),
-            alias_groups.as_ref().map_or("default".to_string(), |ag| ag.join("-")),
+            alias_groups
+                .as_ref()
+                .map_or("default".to_string(), |ag| ag.join("-")),
             lib.unwrap_or("default"),
             i
         );
@@ -502,11 +509,12 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
             }
             (None, Some(ref alias_groups)) => {
                 for alias_group in alias_groups {
-                    assert!(home_path
-                        .join(alias_group)
-                        .join(&project.name)
-                        .join(".pm/project.toml")
-                        .exists(),
+                    assert!(
+                        home_path
+                            .join(alias_group)
+                            .join(&project.name)
+                            .join(".pm/project.toml")
+                            .exists(),
                         "Alias group {} not found for project {}",
                         alias_group,
                         project.name
@@ -514,11 +522,12 @@ fn test_create_many_projects_with_type_and_alias_and_lib() {
                 }
                 for alias_group in ["alias1", "alias2", "alias3"] {
                     if !alias_groups.contains(&alias_group.to_string()) {
-                        assert!(!home_path
-                            .join(alias_group)
-                            .join(&project.name)
-                            .join(".pm/project.toml")
-                            .exists(),
+                        assert!(
+                            !home_path
+                                .join(alias_group)
+                                .join(&project.name)
+                                .join(".pm/project.toml")
+                                .exists(),
                             "Alias group {} should not exist for project {}",
                             alias_group,
                             project.name

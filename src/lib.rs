@@ -201,7 +201,6 @@ pub fn create_project(
             fs::File::create_new(&project_config_file_path)?;
         }
         (false, false, false, Some(git_clone)) => {
-
             let mut command = std::process::Command::new("git");
             command.arg("clone").arg(git_clone).arg(&project_path);
             log::info!("Running git clone: {:?}", command);
