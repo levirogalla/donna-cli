@@ -32,6 +32,10 @@ done - support a list of groups when making a project
 
 done - auto completion for project names and other stuff
 
+done - add opener support for builders, openers, and config dir
+
+improve readme and documentation
+
 add ability to make and external project, ie, clone a git repo, instead of making the project
 
 create a project alias after the project was created
