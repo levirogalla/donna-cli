@@ -351,7 +351,7 @@ pub fn open_project(
 /// - `xdg` – XDG configuration reference.
 pub fn open_config(xdg: &XDG) -> Result<(), errors::OpenConfigError> {
     let config = Config::load(None, xdg)?;
-    let config_path = Config::get_path(&xdg);
+    let config_path = Config::get_path(xdg);
     let opener = config
         .get_config_opener()
         .ok_or(errors::ConfigVarNotDefinedError(
@@ -388,10 +388,7 @@ pub fn open_builders(xdg: &XDG) -> Result<(), errors::OpenBuildersError> {
     let lua = Lua::new();
     let globals = lua.globals();
     globals
-        .set(
-            "PM_BUILDER_PATH",
-            config.get_builders_path_prefix(),
-        )
+        .set("PM_BUILDER_PATH", config.get_builders_path_prefix())
         .unwrap();
     lua.load(fs::read_to_string(&opener).map_err(|_| {
         errors::OpenerPathNotFoundError(format!("Config opener path {} does not exist", &opener))

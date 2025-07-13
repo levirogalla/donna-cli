@@ -196,7 +196,7 @@ enum CreateEntity {
         /// Path to the opener for the project type, this will be relative to the config variable `openers_dir`, the default is in the share directory   
         #[arg(short, long, value_hint = ValueHint::ExecutablePath)]
         opener: Option<String>,
-        /// Path to the builder for the project type, this will be relative to the config variable `builders_dir`, the default is in the share directory 
+        /// Path to the builder for the project type, this will be relative to the config variable `builders_dir`, the default is in the share directory
         #[arg(short, long, value_hint = ValueHint::ExecutablePath)]
         builder: Option<String>,
 
@@ -842,7 +842,7 @@ fn main() {
             OpenEntity::Builders { terminal } => {
                 let print_builders_path = || match get_builders_path(&xdg) {
                     Ok(path) => {
-                        println!("{}", path);
+                        println!("{path}");
                     }
                     Err(config_error) => {
                         handle_config_error(config_error);
@@ -872,7 +872,7 @@ fn main() {
             OpenEntity::Openers { terminal } => {
                 let print_openers_path = || match get_openers_path(&xdg) {
                     Ok(path) => {
-                        println!("{}", path);
+                        println!("{path}");
                     }
                     Err(config_error) => {
                         handle_config_error(config_error);
