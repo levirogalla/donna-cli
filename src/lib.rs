@@ -388,7 +388,7 @@ pub fn open_builders(xdg: &XDG) -> Result<(), errors::OpenBuildersError> {
     let lua = Lua::new();
     let globals = lua.globals();
     globals
-        .set("PM_BUILDER_PATH", config.get_builders_path_prefix())
+        .set("PM_BUILDERS_PATH", config.get_builders_path_prefix())
         .unwrap();
     lua.load(fs::read_to_string(&opener).map_err(|_| {
         errors::OpenerPathNotFoundError(format!("Config opener path {} does not exist", &opener))
@@ -414,7 +414,7 @@ pub fn open_openers(xdg: &XDG) -> Result<(), errors::OpenOpenersError> {
     let lua = Lua::new();
     let globals = lua.globals();
     globals
-        .set("PM_OPENER_PATH", config.get_openers_path_prefix())
+        .set("PM_OPENERS_PATH", config.get_openers_path_prefix())
         .unwrap();
     lua.load(fs::read_to_string(&opener).map_err(|_| {
         errors::OpenerPathNotFoundError(format!("Config opener path {} does not exist", &opener))
