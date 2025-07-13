@@ -344,6 +344,95 @@ pub fn open_project(
     Ok(())
 }
 
+/// Opens the configuration file for the project manager in a terminal or editor.
+///
+/// # Arguments
+/// - `terminal` – If true, opens the config in a terminal; otherwise, opens
+/// - `xdg` – XDG configuration reference.
+pub fn open_config(xdg: &XDG) -> Result<(), errors::OpenConfigError> {
+    let config = Config::load(None, xdg)?;
+    let config_path = Config::get_path(&xdg);
+    let opener = config
+        .get_config_opener()
+        .ok_or(errors::ConfigVarNotDefinedError(
+            "config_opener".to_string(),
+        ))?;
+
+    let lua = Lua::new();
+    let globals = lua.globals();
+    globals
+        .set("PM_CONFIG_PATH", config_path.to_str().unwrap())
+        .unwrap();
+    lua.load(fs::read_to_string(&opener).map_err(|_| {
+        errors::OpenerPathNotFoundError(format!("Config opener path {} does not exist", &opener))
+    })?)
+    .exec()
+    .expect("Failed to run config opener");
+
+    Ok(())
+}
+
+/// Opens the configuration file for the project manager in a terminal or editor.
+///
+/// # Arguments
+/// - `terminal` – If true, opens the config in a terminal; otherwise, opens
+/// - `xdg` – XDG configuration reference.
+pub fn open_builders(xdg: &XDG) -> Result<(), errors::OpenBuildersError> {
+    let config = Config::load(None, xdg)?;
+    let opener = config
+        .get_builders_opener()
+        .ok_or(errors::ConfigVarNotDefinedError(
+            "builders_opener".to_string(),
+        ))?;
+
+    let lua = Lua::new();
+    let globals = lua.globals();
+    globals
+        .set(
+            "PM_BUILDER_PATH",
+            config.get_builders_path_prefix(),
+        )
+        .unwrap();
+    lua.load(fs::read_to_string(&opener).map_err(|_| {
+        errors::OpenerPathNotFoundError(format!("Config opener path {} does not exist", &opener))
+    })?)
+    .exec()
+    .expect("Failed to run config opener");
+
+    Ok(())
+}
+
+/// Opens the configuration file for the project manager in a terminal or editor.
+///
+/// # Arguments
+/// - `terminal` – If true, opens the config in a terminal; otherwise, opens
+/// - `xdg` – XDG configuration reference.
+pub fn open_openers(xdg: &XDG) -> Result<(), errors::OpenOpenersError> {
+    let config = Config::load(None, xdg)?;
+    let opener = config
+        .get_openers_opener()
+        .ok_or(errors::ConfigVarNotDefinedError(
+            "openers_opener".to_string(),
+        ))?;
+    let lua = Lua::new();
+    let globals = lua.globals();
+    globals
+        .set("PM_OPENER_PATH", config.get_openers_path_prefix())
+        .unwrap();
+    lua.load(fs::read_to_string(&opener).map_err(|_| {
+        errors::OpenerPathNotFoundError(format!("Config opener path {} does not exist", &opener))
+    })?)
+    .exec()
+    .expect("Failed to run config opener");
+    Ok(())
+}
+
+/// Gets the full path of a project by its name and library. Or default lib if not specified.
+///
+/// # Arguments
+/// - `name` – The name of the project.
+/// - `lib` – Optional library name to locate the project.
+/// - `xdg` – XDG configuration reference.
 pub fn get_project_path(
     name: &str,
     lib: Option<&str>,
@@ -361,6 +450,32 @@ pub fn get_project_path(
         )))?;
     }
     Ok(path)
+}
+
+/// Get config path
+///
+/// # Arguments
+/// - `xdg` – XDG configuration reference.
+pub fn get_config_path(xdg: &XDG) -> PathBuf {
+    Config::get_path(xdg)
+}
+
+/// Get openers path
+///
+/// # Arguments
+/// - `xdg` – XDG configuration reference.
+pub fn get_openers_path(xdg: &XDG) -> Result<String, errors::ConfigError> {
+    let config = Config::load(None, xdg)?;
+    Ok(config.get_openers_path_prefix())
+}
+
+/// Get builders path
+///
+/// # Arguments
+/// - `xdg` – XDG configuration reference.
+pub fn get_builders_path(xdg: &XDG) -> Result<String, errors::ConfigError> {
+    let config = Config::load(None, xdg)?;
+    Ok(config.get_builders_path_prefix())
 }
 
 /// To update alias group name and move alias group to a new location.

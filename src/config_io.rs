@@ -10,8 +10,12 @@ pub struct Config {
     library_paths: Option<HashMap<types::LibraryName, String>>,
     alias_groups: Option<HashMap<types::AliasGroupName, AliasGroup>>,
     project_types: Option<HashMap<types::ProjectTypeName, ProjectType>>,
-    builders_path_prefix: Option<String>,
-    openers_path_prefix: Option<String>,
+    builders_dir: Option<String>,
+    openers_dir: Option<String>,
+
+    builders_opener: Option<String>,
+    openers_opener: Option<String>,
+    config_opener: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -64,6 +68,24 @@ impl Config {
                     .unwrap()
                     .to_string()
             });
+
+        config.builders_dir.get_or_insert_with(|| {
+            PathBuf::from(xdg.get_data_home())
+                .join(Self::REL_DATA_DIR)
+                .join("builders")
+                .to_str()
+                .unwrap()
+                .to_string()
+        });
+
+        config.openers_dir.get_or_insert_with(|| {
+            PathBuf::from(xdg.get_data_home())
+                .join(Self::REL_DATA_DIR)
+                .join("openers")
+                .to_str()
+                .unwrap()
+                .to_string()
+        });
 
         Ok(config)
     }
@@ -140,8 +162,8 @@ impl Config {
         builder: Option<&str>,
         opener: Option<&str>,
     ) {
-        let builder_path_prefix = PathBuf::from(self.builders_path_prefix.as_deref().unwrap_or(""));
-        let opener_path_prefix = PathBuf::from(self.openers_path_prefix.as_deref().unwrap_or(""));
+        let builder_path_prefix = PathBuf::from(self.builders_dir.as_deref().unwrap_or(""));
+        let opener_path_prefix = PathBuf::from(self.openers_dir.as_deref().unwrap_or(""));
 
         let builder = builder.map(|s| builder_path_prefix.join(s).to_str().unwrap().to_string());
         let opener = opener.map(|s| opener_path_prefix.join(s).to_str().unwrap().to_string());
@@ -180,11 +202,11 @@ impl Config {
     }
 
     pub fn set_builders_path_prefix(&mut self, path: &str) {
-        self.builders_path_prefix = Some(path.to_string());
+        self.builders_dir = Some(path.to_string());
     }
 
     pub fn set_openers_path_prefix(&mut self, path: &str) {
-        self.openers_path_prefix = Some(path.to_string());
+        self.openers_dir = Some(path.to_string());
     }
 
     pub fn get_alias_groups(&self) -> Option<HashMap<types::AliasGroupName, AliasGroup>> {
@@ -197,6 +219,26 @@ impl Config {
 
     pub fn get_default_lib(&self) -> Option<types::LibraryName> {
         self.default_lib.clone()
+    }
+
+    pub fn get_builders_opener(&self) -> Option<String> {
+        self.builders_opener.clone()
+    }
+
+    pub fn get_openers_opener(&self) -> Option<String> {
+        self.openers_opener.clone()
+    }
+
+    pub fn get_config_opener(&self) -> Option<String> {
+        self.config_opener.clone()
+    }
+
+    pub fn get_openers_path_prefix(&self) -> String {
+        self.openers_dir.clone().unwrap() // will never be None if the config is loaded correctly
+    }
+
+    pub fn get_builders_path_prefix(&self) -> String {
+        self.builders_dir.clone().unwrap() // will never be None if the config is loaded correctly
     }
 }
 

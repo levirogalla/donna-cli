@@ -79,6 +79,10 @@ pub struct BuilderPathNotFoundError(pub String);
 pub struct OpenerPathNotFoundError(pub String);
 
 #[derive(thiserror::Error, Debug)]
+#[error("Config var not defined: {0}")]
+pub struct ConfigVarNotDefinedError(pub String);
+
+#[derive(thiserror::Error, Debug)]
 pub enum ConfigError {
     #[error("IO error: {0}")]
     BadPath(#[from] std::io::Error),
@@ -211,6 +215,51 @@ pub enum OpenProjectError {
     // opener path not found
     #[error("Opener path not found: {0}")]
     OpenerPathNotFound(#[from] OpenerPathNotFoundError),
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum OpenConfigError {
+    // config error
+    #[error("Config error: {0}")]
+    ConfigError(#[from] ConfigError),
+
+    // opener path not found
+    #[error("Opener path not found: {0}")]
+    OpenerPathNotFound(#[from] OpenerPathNotFoundError),
+
+    // config var not defined
+    #[error("Config var not defined: {0}")]
+    ConfigVarNotDefined(#[from] ConfigVarNotDefinedError),
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum OpenOpenersError {
+    // config error
+    #[error("Config error: {0}")]
+    ConfigError(#[from] ConfigError),
+
+    // opener path not found
+    #[error("Opener path not found: {0}")]
+    OpenerPathNotFound(#[from] OpenerPathNotFoundError),
+
+    // config var not defined
+    #[error("Config var not defined: {0}")]
+    ConfigVarNotDefined(#[from] ConfigVarNotDefinedError),
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum OpenBuildersError {
+    // config error
+    #[error("Config error: {0}")]
+    ConfigError(#[from] ConfigError),
+
+    // opener path not found
+    #[error("Opener path not found: {0}")]
+    OpenerPathNotFound(#[from] OpenerPathNotFoundError),
+
+    // config var not defined
+    #[error("Config var not defined: {0}")]
+    ConfigVarNotDefined(#[from] ConfigVarNotDefinedError),
 }
 
 #[derive(thiserror::Error, Debug)]

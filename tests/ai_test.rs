@@ -5,7 +5,7 @@ use donna::{
     untrack_alias_group, untrack_library, untrack_project_type, update_alias_group, Config,
     ProjectConfig, XDG,
 };
-use std::fs;
+use std::{fs, path::PathBuf};
 
 mod utils;
 use utils::{gen_test_alias_groups_path, gen_test_home_path, setup_home};
@@ -40,8 +40,8 @@ fn test_define_project_type() {
         project_type.default_alias_groups.as_ref().unwrap()[0],
         "code"
     );
-    assert_eq!(project_type.builder.as_ref().unwrap(), "lua/builder.lua");
-    assert_eq!(project_type.opener.as_ref().unwrap(), "lua/opener.lua");
+    assert_eq!(project_type.builder.as_ref().unwrap(), PathBuf::from(xdg.get_data_home()).join("project_manager").join("builders").join("lua/builder.lua").to_str().unwrap());
+    assert_eq!(project_type.opener.as_ref().unwrap(), PathBuf::from(xdg.get_data_home()).join("project_manager").join("openers").join("lua/opener.lua").to_str().unwrap());
 
     // Test redefining project type - should fail without redefine flag
     let err_result = define_project_type(
@@ -962,8 +962,8 @@ fn test_get_project_types() {
     assert!(types.contains_key("type1"));
     let type1 = &types["type1"];
     assert_eq!(type1.default_alias_groups.as_ref().unwrap()[0], "alias1");
-    assert_eq!(type1.builder.as_ref().unwrap(), "builder.lua");
-    assert_eq!(type1.opener.as_ref().unwrap(), "opener.lua");
+    assert_eq!(type1.builder.as_ref().unwrap(), PathBuf::from(xdg.get_data_home()).join("project_manager").join("builders").join("builder.lua").to_str().unwrap());
+    assert_eq!(type1.opener.as_ref().unwrap(), PathBuf::from(xdg.get_data_home()).join("project_manager").join("openers").join("opener.lua").to_str().unwrap());
 
     assert!(types.contains_key("type2"));
     let type2 = &types["type2"];
