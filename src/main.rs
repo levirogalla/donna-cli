@@ -7,10 +7,12 @@ use donna::{
     errors::{
         ConfigError, CreateAliasGroupError, CreateLibError, CreateProjectError,
         GetAliasGroupsError, GetLibsError, GetProjectPathError, GetProjectTypesError,
-        GetProjectsError, OpenProjectError, ProjectTypeDefinitionError, UntrackAliasGroupError,
-        UntrackLibError, UntrackProjectTypeError,
+        GetProjectsError, OpenBuildersError, OpenConfigError, OpenOpenersError, OpenProjectError,
+        ProjectTypeDefinitionError, UntrackAliasGroupError, UntrackLibError,
+        UntrackProjectTypeError,
     },
-    get_alias_groups, get_libraries, get_project_path, get_project_types, get_projects,
+    get_alias_groups, get_builders_path, get_config_path, get_libraries, get_openers_path,
+    get_project_path, get_project_types, get_projects, open_builders, open_config, open_openers,
     open_project, set_builders_path_prefix, set_default_lib, set_openers_path_prefix,
     untrack_alias_group, untrack_library, untrack_project_type, utils, ProjectConfig,
 };
@@ -191,10 +193,10 @@ enum CreateEntity {
         /// Names of default alias group for the project type
         default_groups: Option<Vec<String>>,
 
-        /// Path to the opener for the project type
+        /// Path to the opener for the project type, this will be relative to the config variable `openers_dir`, the default is in the share directory   
         #[arg(short, long, value_hint = ValueHint::ExecutablePath)]
         opener: Option<String>,
-        /// Path to the builder for the project type
+        /// Path to the builder for the project type, this will be relative to the config variable `builders_dir`, the default is in the share directory
         #[arg(short, long, value_hint = ValueHint::ExecutablePath)]
         builder: Option<String>,
 
@@ -293,6 +295,27 @@ enum OpenEntity {
         #[arg(short = 'l', long)]
         lib: Option<String>,
 
+        /// Library to open the project with
+        #[arg(short = 't', long, default_value_t = false)]
+        terminal: bool,
+    },
+
+    /// Open the config file
+    Config {
+        /// Library to open the project with
+        #[arg(short = 't', long, default_value_t = false)]
+        terminal: bool,
+    },
+
+    /// Open the builders dir
+    Builders {
+        /// Library to open the project with
+        #[arg(short = 't', long, default_value_t = false)]
+        terminal: bool,
+    },
+
+    /// Open the openers dir
+    Openers {
         /// Library to open the project with
         #[arg(short = 't', long, default_value_t = false)]
         terminal: bool,
@@ -788,6 +811,93 @@ fn main() {
                     }
                 },
             },
+
+            OpenEntity::Config { terminal } => {
+                let print_config_path = || {
+                    let path = get_config_path(&xdg);
+                    println!("{}", path.to_str().unwrap());
+                };
+
+                match terminal {
+                    true => print_config_path(),
+
+                    false => match open_config(&xdg) {
+                        Ok(_) => {
+                            println!("Config opened successfully.");
+                        }
+                        Err(OpenConfigError::ConfigError(config_error)) => {
+                            handle_config_error(config_error);
+                        }
+                        Err(OpenConfigError::ConfigVarNotDefined(var_name)) => {
+                            println!("Config variable not defined: {var_name}, printing config path instead.");
+                            print_config_path();
+                        }
+                        Err(err) => {
+                            println!("Error opening config: {err}");
+                        }
+                    },
+                }
+            }
+
+            OpenEntity::Builders { terminal } => {
+                let print_builders_path = || match get_builders_path(&xdg) {
+                    Ok(path) => {
+                        println!("{path}");
+                    }
+                    Err(config_error) => {
+                        handle_config_error(config_error);
+                    }
+                };
+                match terminal {
+                    true => print_builders_path(),
+
+                    false => match open_builders(&xdg) {
+                        Ok(_) => {
+                            println!("Builders opened successfully.");
+                        }
+                        Err(OpenBuildersError::ConfigError(config_error)) => {
+                            handle_config_error(config_error);
+                        }
+                        Err(OpenBuildersError::ConfigVarNotDefined(var_name)) => {
+                            println!("Config variable not defined: {var_name}, printing builders path instead.");
+                            print_builders_path();
+                        }
+                        Err(err) => {
+                            println!("Error opening builders: {err}");
+                        }
+                    },
+                }
+            }
+
+            OpenEntity::Openers { terminal } => {
+                let print_openers_path = || match get_openers_path(&xdg) {
+                    Ok(path) => {
+                        println!("{path}");
+                    }
+                    Err(config_error) => {
+                        handle_config_error(config_error);
+                    }
+                };
+                match terminal {
+                    true => print_openers_path(),
+
+                    false => match open_openers(&xdg) {
+                        Ok(_) => {
+                            println!("Openers opened successfully.");
+                        }
+                        Err(OpenOpenersError::ConfigError(config_error)) => {
+                            handle_config_error(config_error);
+                        }
+                        Err(OpenOpenersError::ConfigVarNotDefined(var_name)) => {
+                            println!("Config variable not defined: {var_name}, printing openers path instead.");
+                            print_openers_path();
+                        }
+                        Err(err) => {
+                            println!("Error opening openers: {err}");
+                        }
+                    },
+                }
+            }
         },
 
         Commands::Delete => {

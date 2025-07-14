@@ -32,6 +32,29 @@ An opener could look like this:
 os.execute("cd " .. PM_PROJECT_PATH .. " && code .")
 ```
 
+There are 3 special cases for openers. You can define an opener for the openers and builders directory, and for the config file. For these openers the only global variables available are
+
+```lua
+print("PM_BUILDERS_PATH: " .. (PM_BUILDERS_PATH or "nil"))
+print("PM_OPENERS_PATH: " .. (PM_OPENERS_PATH or "nil"))
+print("PM_CONFIG_PATH: " .. (PM_CONFIG_PATH or "nil"))
+```
+
+This means that a general opener for VS Code would look like:
+
+```lua
+-- Determine which path variable is defined
+local path = PM_PROJECT_PATH or PM_CONFIG_PATH or PM_OPENERS_PATH or PM_BUILDERS_PATH
+
+if path then
+    os.execute("code " .. path)
+else
+    error("No valid path variable found (PM_PROJECT_PATH, PM_CONFIG_PATH, PM_OPENERS_PATH, or PM_BUILDERS_PATH)")
+end
+```
+
+Since one of the paths will always be defined. Alternatively, you could check to see if the variable `PM_PROJECT_NAME` is defined to see if the opener is being called for one of the special cases, or if it is being called for a project.
+
 ## Installation
 
 Download the binary for your system and add it to your PATH.
