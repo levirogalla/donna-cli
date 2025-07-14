@@ -853,7 +853,7 @@ fn main() {
 
                     false => match open_builders(&xdg) {
                         Ok(_) => {
-                            println!("Config opened successfully.");
+                            println!("Builders opened successfully.");
                         }
                         Err(OpenBuildersError::ConfigError(config_error)) => {
                             handle_config_error(config_error);
@@ -863,7 +863,7 @@ fn main() {
                             print_builders_path();
                         }
                         Err(err) => {
-                            println!("Error opening config: {err}");
+                            println!("Error opening builders: {err}");
                         }
                     },
                 }
@@ -883,7 +883,7 @@ fn main() {
 
                     false => match open_openers(&xdg) {
                         Ok(_) => {
-                            println!("Config opened successfully.");
+                            println!("Openers opened successfully.");
                         }
                         Err(OpenOpenersError::ConfigError(config_error)) => {
                             handle_config_error(config_error);
@@ -893,7 +893,7 @@ fn main() {
                             print_openers_path();
                         }
                         Err(err) => {
-                            println!("Error opening config: {err}");
+                            println!("Error opening openers: {err}");
                         }
                     },
                 }
