@@ -576,66 +576,6 @@ fn main() {
                     table.with(Width::truncate(width).suffix("..."));
                 }
                 println!("{table}");
-
-                // Add this near the top of your file with other imports
-                // type ProjectRow = (
-                //     Option<String>,
-                //     Option<String>,
-                //     Option<String>,
-                //     Option<String>,
-                // );
-                // let projects: Vec<ProjectRow> = projects_map
-                //     .iter()
-                //     .map(|d| {
-                //         let project_name = Some(d.0.clone());
-                //         let project_type = if *types || *all {
-                //             Some(d.1 .0.clone())
-                //         } else {
-                //             None
-                //         };
-                //         let project_lib = if *libs || *all {
-                //             Some(d.1 .1.clone())
-                //         } else {
-                //             None
-                //         };
-                //         let project_path = if *paths || *all {
-                //             Some(d.1 .2.clone())
-                //         } else {
-                //             None
-                //         };
-                //         (project_name, project_type, project_lib, project_path)
-                //     })
-                //     .collect();
-
-                // // Prepare headers
-                // let mut headers = vec!["Name".to_string()];
-                // if *types || *all {
-                //     headers.push("Type".to_string());
-                // }
-                // if *libs || *all {
-                //     headers.push("Lib".to_string());
-                // }
-                // if *paths || *all {
-                //     headers.push("Path".to_string());
-                // }
-
-                // // Prepare rows as Vec<Vec<String>>
-                // let mut rows: Vec<Vec<String>> = Vec::new();
-                // for (name, project_type, project_lib, project_path) in &projects {
-                //     let mut row = vec![name.clone().unwrap_or_default()];
-                //     if *types || *all {
-                //         row.push(project_type.clone().unwrap_or_default());
-                //     }
-                //     if *libs || *all {
-                //         row.push(project_lib.clone().unwrap_or_default());
-                //     }
-                //     if *paths || *all {
-                //         row.push(project_path.clone().unwrap_or_default());
-                //     }
-                //     rows.push(row);
-                // }
-
-                // utils::pretty_print_table(rows, headers);
             }
 
             ListEntity::Libraries {} => {

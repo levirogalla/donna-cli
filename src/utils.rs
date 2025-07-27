@@ -118,7 +118,7 @@ pub fn delete(path: &str) -> Result<(), errors::DeleteError> {
     Ok(())
 }
 
-pub fn format_table(table: &mut Table, style: Option<&str>) {
+pub fn format_table<'a>(table: &'a mut Table, style: Option<&str>) -> &'a mut Table {
     match style {
         Some("ascii") => table.with(Style::ascii()),
         Some("ascii_rounded") => table.with(Style::ascii_rounded()),
@@ -137,5 +137,5 @@ pub fn format_table(table: &mut Table, style: Option<&str>) {
             log::warn!("Unknown table style, using default (blank)");
             table.with(Style::blank())
         }
-    };
+    }
 }
