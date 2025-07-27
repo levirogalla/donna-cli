@@ -6,7 +6,6 @@ use tabled::settings::Style;
 use tabled::Table;
 
 use crate::errors;
-use crate::Config;
 
 pub mod types {
     pub type AliasGroupName = String;

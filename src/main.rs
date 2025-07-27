@@ -15,13 +15,13 @@ use donna::{
     get_project_path, get_project_types, get_projects, get_table_style, open_builders, open_config,
     open_openers, open_project, set_builders_path_prefix, set_default_lib, set_openers_path_prefix,
     untrack_alias_group, untrack_library, untrack_project_type,
-    utils::{self, format_table},
+    utils::format_table,
     ProjectConfig,
 };
 
 use tabled::{
     builder::Builder,
-    settings::{Style, Width},
+    settings::Width,
 };
 
 #[derive(clap::ValueEnum, Clone, Debug)]
