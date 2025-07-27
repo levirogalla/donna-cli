@@ -19,10 +19,7 @@ use donna::{
     ProjectConfig,
 };
 
-use tabled::{
-    builder::Builder,
-    settings::Width,
-};
+use tabled::{builder::Builder, settings::Width};
 
 #[derive(clap::ValueEnum, Clone, Debug)]
 enum Verbosity {
