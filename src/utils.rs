@@ -2,6 +2,9 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use tabled::settings::Style;
+use tabled::Table;
+
 use crate::errors;
 
 pub mod types {
@@ -113,4 +116,26 @@ pub fn delete(path: &str) -> Result<(), errors::DeleteError> {
         trash::delete(path)?;
     }
     Ok(())
+}
+
+pub fn format_table<'a>(table: &'a mut Table, style: Option<&str>) -> &'a mut Table {
+    match style {
+        Some("ascii") => table.with(Style::ascii()),
+        Some("ascii_rounded") => table.with(Style::ascii_rounded()),
+        Some("blank") => table.with(Style::blank()),
+        Some("dots") => table.with(Style::dots()),
+        Some("extended") => table.with(Style::extended()),
+        Some("markdown") => table.with(Style::markdown()),
+        Some("modern") => table.with(Style::modern()),
+        Some("modern_rounded") => table.with(Style::modern_rounded()),
+        Some("psql") => table.with(Style::psql()),
+        Some("re_structured_text") => table.with(Style::re_structured_text()),
+        Some("rounded") => table.with(Style::rounded()),
+        Some("sharp") => table.with(Style::sharp()),
+        None => table.with(Style::blank()), // Default to blank if no style is set
+        _ => {
+            log::warn!("Unknown table style, using default (blank)");
+            table.with(Style::blank())
+        }
+    }
 }

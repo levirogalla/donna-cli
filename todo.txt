@@ -34,6 +34,10 @@ done - auto completion for project names and other stuff
 
 done - add opener support for builders, openers, and config dir
 
+wip - use formatter for printing tables, probably some crate, I chose tabled
+
+how does import work, write some docs for it, does it always make a new lib? does it import to an existing lib? also change handoff flag to exits. I think thats more clear because you can use that flag to reset a projects config even if donna is already tracking it.
+
 improve readme and documentation
 
 add ability to make and external project, ie, clone a git repo, instead of making the project
@@ -41,8 +45,6 @@ add ability to make and external project, ie, clone a git repo, instead of makin
 create a project alias after the project was created
 
 add default indicator to list libraries, maybe also change the default library name, (the one that is set by as default by default, lol, not the default one) so that its less confusing
-
-use formatter for printing tables, probably some crate
 
 delete a project aliases from all expected locations (i.e. alias groups, the user could add an alias anywhere and donna would have know way of finding it unless she scanned the whole user dir)
 

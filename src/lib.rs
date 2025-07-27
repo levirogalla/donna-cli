@@ -750,6 +750,10 @@ pub fn set_default_lib(name: &str, xdg: &XDG) -> Result<(), errors::SetDefaultLi
     Ok(())
 }
 
+pub fn get_table_style(xdg: &XDG) -> Result<Option<String>, errors::ConfigError> {
+    let config = Config::load(None, xdg)?;
+    Ok(config.get_table_style())
+}
 // BLOCKED: need to track aliases for each project in the project config since the system doesn't track it
 // pub fn set_project_alias_groups(name: &str, lib: Option<api_types::LibraryName>, alias_groups: Vec<String>, xdg: &XDG) {
 //     let mut config = Config::load(None, xdg).expect("Could not load config");

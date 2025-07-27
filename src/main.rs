@@ -12,10 +12,14 @@ use donna::{
         UntrackProjectTypeError,
     },
     get_alias_groups, get_builders_path, get_config_path, get_libraries, get_openers_path,
-    get_project_path, get_project_types, get_projects, open_builders, open_config, open_openers,
-    open_project, set_builders_path_prefix, set_default_lib, set_openers_path_prefix,
-    untrack_alias_group, untrack_library, untrack_project_type, utils, ProjectConfig,
+    get_project_path, get_project_types, get_projects, get_table_style, open_builders, open_config,
+    open_openers, open_project, set_builders_path_prefix, set_default_lib, set_openers_path_prefix,
+    untrack_alias_group, untrack_library, untrack_project_type,
+    utils::format_table,
+    ProjectConfig,
 };
+
+use tabled::{builder::Builder, settings::Width};
 
 #[derive(clap::ValueEnum, Clone, Debug)]
 enum Verbosity {
@@ -525,65 +529,53 @@ fn main() {
                     }
                 };
 
-                // Add this near the top of your file with other imports
-                type ProjectRow = (
-                    Option<String>,
-                    Option<String>,
-                    Option<String>,
-                    Option<String>,
-                );
-                let projects: Vec<ProjectRow> = projects_map
-                    .iter()
-                    .map(|d| {
-                        let project_name = Some(d.0.clone());
-                        let project_type = if *types || *all {
-                            Some(d.1 .0.clone())
-                        } else {
-                            None
-                        };
-                        let project_lib = if *libs || *all {
-                            Some(d.1 .1.clone())
-                        } else {
-                            None
-                        };
-                        let project_path = if *paths || *all {
-                            Some(d.1 .2.clone())
-                        } else {
-                            None
-                        };
-                        (project_name, project_type, project_lib, project_path)
-                    })
-                    .collect();
+                let num_columns = 1 + *libs as usize + *types as usize + *paths as usize;
+                let mut builder = Builder::with_capacity(projects_map.len(), num_columns);
 
-                // Prepare headers
-                let mut headers = vec!["Name".to_string()];
+                let mut header = vec!["Name"];
                 if *types || *all {
-                    headers.push("Type".to_string());
+                    header.push("Type");
                 }
                 if *libs || *all {
-                    headers.push("Lib".to_string());
+                    header.push("Lib");
                 }
                 if *paths || *all {
-                    headers.push("Path".to_string());
+                    header.push("Path");
                 }
+                builder.push_record(header);
 
-                // Prepare rows as Vec<Vec<String>>
-                let mut rows: Vec<Vec<String>> = Vec::new();
-                for (name, project_type, project_lib, project_path) in &projects {
-                    let mut row = vec![name.clone().unwrap_or_default()];
+                for project in projects_map.iter() {
+                    let (name, (project_type, project_lib, project_path)) = project;
+                    let mut row = vec![name.clone()];
+
                     if *types || *all {
-                        row.push(project_type.clone().unwrap_or_default());
+                        row.push(project_type.clone());
                     }
                     if *libs || *all {
-                        row.push(project_lib.clone().unwrap_or_default());
+                        row.push(project_lib.clone());
                     }
                     if *paths || *all {
-                        row.push(project_path.clone().unwrap_or_default());
+                        row.push(project_path.clone());
                     }
-                    rows.push(row);
+
+                    builder.push_record(row);
                 }
 
-                utils::pretty_print_table(rows, headers);
+                let mut table = builder.build();
+                let style = match get_table_style(&xdg) {
+                    Ok(style) => style,
+                    Err(err) => {
+                        handle_config_error(err);
+                        return;
+                    }
+                };
+                format_table(&mut table, style.as_deref());
+
+                // Get terminal width and apply truncation
+                if let Some((width, _)) = term_size::dimensions() {
+                    table.with(Width::truncate(width).suffix("..."));
+                }
+                println!("{table}");
             }
 
             ListEntity::Libraries {} => {
@@ -598,12 +590,28 @@ fn main() {
                         return;
                     }
                 };
-                let rows: Vec<Vec<String>> = libs
-                    .iter()
-                    .map(|(name, path)| vec![name.clone(), path.clone()])
-                    .collect();
-                let headers = vec!["Name".to_string(), "Path".to_string()];
-                utils::pretty_print_table(rows, headers);
+
+                let mut builder = Builder::with_capacity(libs.len(), 2);
+                builder.push_record(vec!["Name", "Path"]);
+
+                for (name, path) in libs.iter() {
+                    builder.push_record(vec![name.clone(), path.clone()]);
+                }
+
+                let mut table = builder.build();
+                let style = match get_table_style(&xdg) {
+                    Ok(style) => style,
+                    Err(err) => {
+                        handle_config_error(err);
+                        return;
+                    }
+                };
+                format_table(&mut table, style.as_deref());
+
+                if let Some((width, _)) = term_size::dimensions() {
+                    table.with(Width::truncate(width).suffix("..."));
+                }
+                println!("{table}");
             }
 
             ListEntity::AliasGroups {} => {
@@ -618,12 +626,28 @@ fn main() {
                         return;
                     }
                 };
-                let rows: Vec<Vec<String>> = alias_groups
-                    .iter()
-                    .map(|(name, group)| vec![name.clone(), group.path.clone()])
-                    .collect();
-                let headers = vec!["Name".to_string(), "Path".to_string()];
-                utils::pretty_print_table(rows, headers);
+
+                let mut builder = Builder::with_capacity(alias_groups.len(), 2);
+                builder.push_record(vec!["Name", "Path"]);
+
+                for (name, group) in alias_groups.iter() {
+                    builder.push_record(vec![name.clone(), group.path.clone()]);
+                }
+
+                let mut table = builder.build();
+                let style = match get_table_style(&xdg) {
+                    Ok(style) => style,
+                    Err(err) => {
+                        handle_config_error(err);
+                        return;
+                    }
+                };
+                format_table(&mut table, style.as_deref());
+
+                if let Some((width, _)) = term_size::dimensions() {
+                    table.with(Width::truncate(width).suffix("..."));
+                }
+                println!("{table}");
             }
 
             ListEntity::ProjectTypes {} => {
@@ -634,27 +658,36 @@ fn main() {
                         return;
                     }
                 };
-                let rows: Vec<Vec<String>> = project_types
-                    .iter()
-                    .map(|(name, pt)| {
-                        vec![
-                            name.clone(),
-                            pt.builder.clone().unwrap_or("".to_string()),
-                            pt.opener.clone().unwrap_or("".to_string()),
-                            pt.default_alias_groups
-                                .clone()
-                                .map(|v| v.join(", "))
-                                .unwrap_or("".to_string()),
-                        ]
-                    })
-                    .collect();
-                let headers = vec![
-                    "Name".to_string(),
-                    "Builder".to_string(),
-                    "Opener".to_string(),
-                    "Default Groups".to_string(),
-                ];
-                utils::pretty_print_table(rows, headers);
+
+                let mut builder = Builder::with_capacity(project_types.len(), 4);
+                builder.push_record(vec!["Name", "Builder", "Opener", "Default Groups"]);
+
+                for (name, pt) in project_types.iter() {
+                    builder.push_record(vec![
+                        name.clone(),
+                        pt.builder.clone().unwrap_or_default(),
+                        pt.opener.clone().unwrap_or_default(),
+                        pt.default_alias_groups
+                            .clone()
+                            .map(|v| v.join(", "))
+                            .unwrap_or_default(),
+                    ]);
+                }
+
+                let mut table = builder.build();
+                let style = match get_table_style(&xdg) {
+                    Ok(style) => style,
+                    Err(err) => {
+                        handle_config_error(err);
+                        return;
+                    }
+                };
+                format_table(&mut table, style.as_deref());
+
+                if let Some((width, _)) = term_size::dimensions() {
+                    table.with(Width::truncate(width).suffix("..."));
+                }
+                println!("{table}");
             }
         },
 

@@ -16,6 +16,8 @@ pub struct Config {
     builders_opener: Option<String>,
     openers_opener: Option<String>,
     config_opener: Option<String>,
+
+    table_style: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -239,6 +241,14 @@ impl Config {
 
     pub fn get_builders_path_prefix(&self) -> String {
         self.builders_dir.clone().unwrap() // will never be None if the config is loaded correctly
+    }
+
+    pub fn get_table_style(&self) -> Option<String> {
+        self.table_style.clone()
+    }
+
+    pub fn set_table_style(&mut self, style: &str) {
+        self.table_style = Some(style.to_string());
     }
 }
 
