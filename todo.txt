@@ -34,11 +34,17 @@ done - auto completion for project names and other stuff
 
 done - add opener support for builders, openers, and config dir
 
-wip - use formatter for printing tables, probably some crate, I chose tabled
+done - use formatter for printing tables, probably some crate, I chose tabled
+
+done - add sort feature to make bulk moving projects to aliasgroups faster
+
+update tables to not hide improtant info when the width of the terminal is too small, eg when listing project-types
 
 how does import work, write some docs for it, does it always make a new lib? does it import to an existing lib? also change handoff flag to exits. I think thats more clear because you can use that flag to reset a projects config even if donna is already tracking it.
 
 improve readme and documentation
+
+creating an alias group in the config file won't work since it won't create the folder on the fs, I think donna should just create the alias group folder if it doesn't already exist to stop this from being an issue
 
 add ability to make and external project, ie, clone a git repo, instead of making the project
 
