@@ -757,7 +757,7 @@ fn main() {
                         Vec::new()
                     };
 
-                println!("Project: {}", project_name);
+                println!("Project: {project_name}");
                 if !current_groups.is_empty() {
                     println!("  Current groups: {}", current_groups.join(", "));
                 }
@@ -797,7 +797,7 @@ fn main() {
                     match create_alias(&project_name, group_name, lib_name, &xdg) {
                         Ok(_) => {}
                         Err(err) => {
-                            println!("  Error creating alias in '{}': {}", group_name, err);
+                            println!("  Error creating alias in '{group_name}': {err}");
                         }
                     }
                 }
