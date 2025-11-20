@@ -1,4 +1,4 @@
 project_type = "rust"
 opener = "/Users/levirogalla/.local/share/project_manager/openers/rust.lua"
 builder = "/Users/levirogalla/.local/share/project_manager/builders/rust.lua"
-tracked_alias_groups = ["rust"]
+tracked_alias_groups = ["rust", "rust", "maintenance"]

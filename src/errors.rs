@@ -472,6 +472,23 @@ pub enum DeleteError {
     IoError(#[from] std::io::Error),
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum CreateAliasError {
+    // config error
+    #[error("Config error: {0}")]
+    ConfigError(#[from] ConfigError),
+
+    // io error
+    #[error("IO Error: {0}")]
+    IoError(#[from] std::io::Error),
+
+    #[error("Alias group not tracked: {0}")]
+    AliasGroupNotTrackedError(#[from] AliasGroupNotTrackedError),
+
+    #[error("Project config error: {0}")]
+    ProjectConfigError(#[from] ProjectConfigError),
+}
+
 // #[derive(thiserror::Error, Debug)]
 // pub enum DonnaError {
 //     #[error("Config error: {0}")]

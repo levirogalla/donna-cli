@@ -1,9 +1,9 @@
-use std::io::Write;
+use std::{io::Write, path};
 
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, Shell, ValueHint};
 use donna::{
-    create_alias_group, create_lib, create_project, define_project_type, env_setup,
+    create_alias, create_alias_group, create_lib, create_project, define_project_type, env_setup,
     errors::{
         ConfigError, CreateAliasGroupError, CreateLibError, CreateProjectError,
         GetAliasGroupsError, GetLibsError, GetProjectPathError, GetProjectTypesError,
@@ -54,6 +54,12 @@ enum Commands {
     List {
         #[command(subcommand)]
         entity: ListEntity,
+    },
+
+    /// Sort projects in a library. Loop through all projects and ask which group to move them to.
+    Sort {
+        /// Name of the library to sort
+        lib_name: String,
     },
 
     /// Import a library and all projects in it
@@ -690,6 +696,117 @@ fn main() {
                 println!("{table}");
             }
         },
+
+        Commands::Sort { lib_name } => {
+            let projects = match get_projects(&xdg) {
+                Ok(projects) => projects
+                    .iter()
+                    .filter(|(_, (_, project_lib, _))| project_lib == lib_name)
+                    .map(|(name, (_, _, path))| (name.clone(), path.clone()))
+                    .collect::<Vec<_>>(),
+                Err(GetProjectsError::ConfigError(config_error)) => {
+                    handle_config_error(config_error);
+                    return;
+                }
+                Err(err) => {
+                    println!("Error getting projects: {err}");
+                    return;
+                }
+            };
+
+            let alias_groups = match get_alias_groups(&xdg) {
+                Ok(groups) => groups,
+                Err(GetAliasGroupsError::ConfigError(config_error)) => {
+                    handle_config_error(config_error);
+                    return;
+                }
+                Err(err) => {
+                    println!("Error getting alias groups: {err}");
+                    return;
+                }
+            };
+
+            if alias_groups.is_empty() {
+                println!("No alias groups found. Create some alias groups first.");
+                return;
+            }
+
+            // Display available alias groups
+            println!("\nAvailable alias groups:");
+            let mut group_names: Vec<String> = alias_groups.keys().cloned().collect();
+            group_names.sort();
+
+            let print_options = || {
+                for (idx, name) in group_names.iter().enumerate() {
+                    println!("  {}: {}", idx + 1, name);
+                }
+                println!("  0: Skip this project");
+                println!();
+            };
+
+            print_options();
+
+            for (project_name, project_path) in projects {
+                // Load current project config to show current groups
+                let config_path =
+                    path::PathBuf::from(&project_path).join(ProjectConfig::PROJECT_ROOT_REL_PATH);
+                let current_groups =
+                    if let Ok(config) = ProjectConfig::load(config_path.to_str().unwrap()) {
+                        config.tracked_alias_groups.unwrap_or_default()
+                    } else {
+                        Vec::new()
+                    };
+
+                println!("Project: {project_name}");
+                if !current_groups.is_empty() {
+                    println!("  Current groups: {}", current_groups.join(", "));
+                }
+
+                print!("  Select alias groups (comma-separated numbers, or 0 to skip): ");
+                std::io::stdout().flush().unwrap();
+
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input).unwrap();
+                let input = input.trim();
+
+                if input == "0" || input.is_empty() {
+                    println!("  Skipped.\n");
+                    continue;
+                }
+
+                // Parse the input
+                let selected_groups: Vec<String> = input
+                    .split(',')
+                    .filter_map(|s| {
+                        let idx = s.trim().parse::<usize>().ok()?;
+                        if idx > 0 && idx <= group_names.len() {
+                            Some(group_names[idx - 1].clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+
+                if selected_groups.is_empty() {
+                    println!("  No valid groups selected, skipping.\n");
+                    continue;
+                }
+
+                // Create aliases for each selected group
+                for group_name in &selected_groups {
+                    match create_alias(&project_name, group_name, lib_name, &xdg) {
+                        Ok(_) => {}
+                        Err(err) => {
+                            println!("  Error creating alias in '{group_name}': {err}");
+                        }
+                    }
+                }
+
+                println!("  Added to: {}\n", selected_groups.join(", "));
+            }
+
+            println!("Sorting complete!");
+        }
 
         Commands::Import {
             name,

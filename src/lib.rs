@@ -121,6 +121,7 @@ pub fn create_alias_group(
 /// - `name` – The identifier for the library.
 /// - `path` – Filesystem path where projects will be stored.
 /// - `default` – Whether to set this library as the default.
+/// - `already_exists` – Flag indicating if the library directory already exists. These means that path will just be recorded internally.
 /// - `xdg` – XDG configuration reference.
 pub fn create_lib(
     name: &str,
@@ -291,7 +292,7 @@ pub fn create_project(
         project_config
             .tracked_alias_groups
             .as_mut()
-            .unwrap()
+            .unwrap_or(&mut Vec::new())
             .push(alias_group.to_string());
         symlink(&project_path, alias_path)?;
     }
@@ -753,6 +754,54 @@ pub fn set_default_lib(name: &str, xdg: &XDG) -> Result<(), errors::SetDefaultLi
 pub fn get_table_style(xdg: &XDG) -> Result<Option<String>, errors::ConfigError> {
     let config = Config::load(None, xdg)?;
     Ok(config.get_table_style())
+}
+
+/// Create an alias for a project in a specific alias group
+/// # Arguments
+/// - `name` – The name of the project.
+/// - `lib` – The library where the project is located.
+/// - `xdg` – XDG configuration reference.
+pub fn create_alias(
+    project_name: &str,
+    alias_group_name: &str,
+    lib: &str,
+    xdg: &XDG,
+) -> Result<(), errors::CreateAliasError> {
+    let config = Config::load(None, xdg)?;
+    let project_path = Path::new(
+        config
+            .get_lib_path(Some(lib))
+            .expect("Could not find lib path"),
+    )
+    .join(project_name);
+    let mut project_config = ProjectConfig::load(
+        project_path
+            .join(ProjectConfig::PROJECT_ROOT_REL_PATH)
+            .to_str()
+            .unwrap(),
+    )?;
+
+    let alias_group =
+        config
+            .get_alias_group(alias_group_name)
+            .ok_or(errors::AliasGroupNotTrackedError(format!(
+                "Alias group {alias_group_name} does not exist"
+            )))?;
+    let alias_path = Path::new(&alias_group.path).join(project_name);
+    symlink(&project_path, alias_path)?;
+
+    project_config
+        .tracked_alias_groups
+        .as_mut()
+        .unwrap_or(&mut Vec::new())
+        .push(alias_group_name.to_string());
+    project_config.save(
+        project_path
+            .join(ProjectConfig::PROJECT_ROOT_REL_PATH)
+            .to_str()
+            .unwrap(),
+    )?;
+    Ok(())
 }
 // BLOCKED: need to track aliases for each project in the project config since the system doesn't track it
 // pub fn set_project_alias_groups(name: &str, lib: Option<api_types::LibraryName>, alias_groups: Vec<String>, xdg: &XDG) {
