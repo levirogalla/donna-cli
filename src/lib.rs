@@ -795,7 +795,12 @@ pub fn create_alias(
         .as_mut()
         .unwrap_or(&mut Vec::new())
         .push(alias_group_name.to_string());
-    project_config.save(project_path.join(ProjectConfig::PROJECT_ROOT_REL_PATH).to_str().unwrap())?;
+    project_config.save(
+        project_path
+            .join(ProjectConfig::PROJECT_ROOT_REL_PATH)
+            .to_str()
+            .unwrap(),
+    )?;
     Ok(())
 }
 // BLOCKED: need to track aliases for each project in the project config since the system doesn't track it
